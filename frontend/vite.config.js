@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// 奇遇广场前端：Vite 托管 React 应用，/api 代理到 kcsquare 架构后端（:3100）
+// 奇遇广场前端：Vite 托管 React 应用，/api 代理到后端（:3100）
 export default defineConfig({
   plugins: [react()],
   server: {

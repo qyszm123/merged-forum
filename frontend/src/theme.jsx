@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
-// 移植自 qyszm 的 8 套主题：默认深色（靛紫 #667eea → #764ba2 渐变）
+// 8 套主题：默认深色（靛紫 #667eea → #764ba2 渐变）
 export const themes = {
   dark: {
     name: '深色', icon: '🌙',

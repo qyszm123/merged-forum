@@ -43,7 +43,7 @@ export default function LoginPage() {
     <div className="auth-wrap">
       <div className="auth-card">
         <h1>奇遇广场</h1>
-        <p className="sub">qyszm 风格 × kcsquare 架构 · 两论坛融合</p>
+        <p className="sub">校园科创社区</p>
         <div className="auth-tabs">
           <button className={tab === 'login' ? 'active' : ''} onClick={() => setTab('login')}>
             登录

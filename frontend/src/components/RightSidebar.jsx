@@ -150,14 +150,6 @@ export default function RightSidebar({ onBoard }) {
           </div>
         ))}
       </div>
-
-      <div className="panel">
-        <h3>关于融合</h3>
-        <p style={{ fontSize: 13, color: 'var(--theme-text-secondary)', lineHeight: 1.6, margin: 0 }}>
-          视觉沿用 <b>qyszm 奇遇社交论坛</b> 的靛紫主题与三栏布局；工程架构采用{' '}
-          <b>kcsquare 科创广场</b> 的 Vite + Express/MySQL 分层后端，并集成了两个论坛的全部模块。
-        </p>
-      </div>
     </aside>
   )
 }

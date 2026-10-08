@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "奇遇广场 · 前端（qyszm 风格 + kcsquare 架构：Vite + React + Express/MySQL）",
+  "description": "奇遇广场 · 前端（Vite + React）",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

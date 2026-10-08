@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
 
-/** 简易 markdown 渲染（仿 qyszm） */
+/** 简易 markdown 渲染 */
 function renderMd(md) {
   if (!md) return null
   return md.split('\n').map((line, i) => {

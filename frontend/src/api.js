@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-// 统一封装：自动挂载 Bearer Token，并解包 kcsquare 后端约定响应 { code, message, data }
+// 统一封装：自动挂载 Bearer Token，并解包后端约定响应 { code, message, data }
 const api = axios.create({ baseURL: '' })
 
 api.interceptors.request.use((config) => {

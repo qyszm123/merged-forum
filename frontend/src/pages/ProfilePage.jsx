@@ -111,7 +111,7 @@ export default function ProfilePage() {
       <div className="card">
         <h2 className="section-title">访客主页</h2>
         <p style={{ color: 'var(--theme-text-secondary)' }}>
-          当前融合版仅开放「我的主页」。后续可接入公开用户接口查看 ID {id} 的主页与帖子。
+          当前仅开放「我的主页」。后续可接入公开用户接口查看 ID {id} 的主页与帖子。
         </p>
       </div>
     )

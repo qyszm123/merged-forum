@@ -65,7 +65,7 @@ export default function ModulesPage() {
         {meta.icon} {meta.label}
       </h2>
       <p style={{ color: 'var(--theme-text-secondary)', fontSize: 13, marginTop: -8, marginBottom: 14 }}>
-        该模块来自 kcsquare 架构后端，已随融合接入。列表接口直接复用，UI 沿用 qyszm 风格。
+        浏览本模块内容列表。若暂无数据，可在后台或种子脚本中补充。
       </p>
       {loading && <div className="empty">加载中…</div>}
       {err && <div className="empty">加载失败：{err}</div>}
