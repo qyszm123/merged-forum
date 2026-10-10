@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { emojiIconName } from '../utils/icons.js'
+import Icon from '../components/Icon.jsx'
 
 export default function CareerSquarePage() {
   const navigate = useNavigate()
@@ -36,8 +38,11 @@ export default function CareerSquarePage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ margin: '0 0 6px' }}>🎓 职业学习</h2>
-      <p style={{ color: 'var(--theme-text-secondary)', margin: '0 0 18px', fontSize: 14 }}>
+      <h2 className="section-title">
+        <Icon name="book-open" size={18} />
+        职业学习
+      </h2>
+      <p className="badge-sub">
         选择一个职业方向，逐项掌握技能知识，通关后获得对应身份认证（显示在《我的》个人主页）。
       </p>
 
@@ -54,11 +59,15 @@ export default function CareerSquarePage() {
             onClick={() => navigate(`/career/${c.id}`)}
           >
             <div className="career-card-top">
-              <span className="career-icon-lg">{c.icon}</span>
+              <span className="career-icon-lg">
+                {emojiIconName(c.icon) ? <Icon name={emojiIconName(c.icon)} size={22} /> : c.icon}
+              </span>
               <div style={{ flex: 1 }}>
                 <h3 style={{ margin: '0 0 4px' }}>{c.name}</h3>
                 <div className="post-meta" style={{ margin: 0 }}>
-                  <span>· {c.skillCount} 项技能</span>
+                  <span className="comment-time">
+                    <Icon name="list" size={12} /> {c.skillCount} 项技能
+                  </span>
                   {c.completed && <span className="status-badge active">已完成</span>}
                   {c.joined && !c.completed && <span className="status-badge">学习中</span>}
                 </div>
@@ -67,11 +76,18 @@ export default function CareerSquarePage() {
             <p className="career-desc">{c.description}</p>
             <div className="career-card-bottom">
               {c.completed ? (
-                <span className="tag active" style={{ cursor: 'default' }}>✓ 已获身份</span>
+                <span className="tag active" style={{ cursor: 'default' }}>
+                  <Icon name="check" size={13} />
+                  已获身份
+                </span>
               ) : c.joined ? (
-                <button className="btn-primary" onClick={(e) => { e.stopPropagation(); navigate(`/career/${c.id}`) }}>继续学习 →</button>
+                <button className="btn-primary" onClick={(e) => { e.stopPropagation(); navigate(`/career/${c.id}`) }}>
+                  继续学习
+                  <Icon name="arrow-right" size={15} />
+                </button>
               ) : (
                 <button className="btn-primary" disabled={joining === c.id} onClick={(e) => join(e, c.id)}>
+                  <Icon name="plus" size={15} />
                   {joining === c.id ? '加入中…' : '加入学习'}
                 </button>
               )}

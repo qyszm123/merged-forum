@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import api from '../api.js'
+import Icon from '../components/Icon.jsx'
 
 const META = {
-  projects: { label: '项目广场', icon: '🚀', ep: '/api/projects' },
-  ideas: { label: '点子集市', icon: '💡', ep: '/api/ideas' },
-  points: { label: '积分中心', icon: '⭐', ep: '/api/points/me' },
-  train: { label: '修炼之路', icon: '🎓', ep: '/api/train/banks' },
-  makers: { label: '人才广场', icon: '👥', ep: '/api/makers' },
-  events: { label: '活动报名', icon: '📅', ep: '/api/events/my' }
+  projects: { label: '项目广场', icon: 'layers', ep: '/api/projects' },
+  ideas: { label: '点子集市', icon: 'zap', ep: '/api/ideas' },
+  points: { label: '积分中心', icon: 'star', ep: '/api/points/me' },
+  train: { label: '修炼之路', icon: 'target', ep: '/api/train/banks' },
+  makers: { label: '人才广场', icon: 'users', ep: '/api/makers' },
+  events: { label: '活动报名', icon: 'calendar', ep: '/api/events/my' }
 }
 
 function pickTitle(item) {
@@ -20,7 +21,7 @@ function pickDesc(item) {
 
 export default function ModulesPage() {
   const { name } = useParams()
-  const meta = META[name] || { label: name, icon: '📦', ep: `/api/${name}` }
+  const meta = META[name] || { label: name, icon: 'package', ep: `/api/${name}` }
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState('')
@@ -57,21 +58,36 @@ export default function ModulesPage() {
       })
       .catch((e) => setErr(e.message))
       .finally(() => setLoading(false))
-  }, [meta.ep])
+  }, [meta.ep, meta.label])
 
   return (
     <div>
       <h2 className="section-title">
-        {meta.icon} {meta.label}
+        <Icon name={meta.icon} size={18} />
+        {meta.label}
       </h2>
-      <p style={{ color: 'var(--theme-text-secondary)', fontSize: 13, marginTop: -8, marginBottom: 14 }}>
+      <p className="badge-sub">
         浏览本模块内容列表。若暂无数据，可在后台或种子脚本中补充。
       </p>
+
       {loading && <div className="empty">加载中…</div>}
-      {err && <div className="empty">加载失败：{err}</div>}
-      {!loading && !err && items.length === 0 && (
-        <div className="empty">暂无内容（可能需要在 MySQL 中灌入对应种子数据）。</div>
+      {err && (
+        <div className="empty">
+          <div className="empty-ic">
+            <Icon name="alert-circle" size={30} />
+          </div>
+          加载失败：{err}
+        </div>
       )}
+      {!loading && !err && items.length === 0 && (
+        <div className="empty">
+          <div className="empty-ic">
+            <Icon name="inbox" size={30} />
+          </div>
+          暂无内容（可能需要在 MySQL 中灌入对应种子数据）。
+        </div>
+      )}
+
       <div className="module-grid">
         {items.slice(0, 50).map((it, i) => (
           <div className="module-card" key={it.id || i}>

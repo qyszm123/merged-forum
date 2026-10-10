@@ -7,7 +7,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview --port 4173"
+    "preview": "vite preview --port 4173",
+    "icons:build": "node .iconsrc/generate.mjs",
+    "icons:check": "node .iconsrc/check-icons.mjs && node .iconsrc/check-coverage.mjs && node .iconsrc/check-css.mjs",
+    "icons:scan": "node .iconsrc/scan.mjs",
+    "verify:dev": "node .iconsrc/verify-dev.mjs",
+    "verify:api": "node .iconsrc/smoke-app.mjs",
+    "verify:site": "node .iconsrc/verify-site.mjs",
+    "deploy:pages": "node .iconsrc/deploy-pages.mjs"
   },
   "dependencies": {
     "axios": "^1.7.7",

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { emojiIconName } from '../utils/icons.js'
+import Icon from '../components/Icon.jsx'
 
 /** 简易 markdown 渲染 */
 function renderMd(md) {
@@ -11,7 +13,7 @@ function renderMd(md) {
     if (line.startsWith('### ')) return <h4 key={i} className="kn-h3">{line.slice(4)}</h4>
     if (line.startsWith('**') && line.endsWith('**') && line.length > 4)
       return <p key={i} className="kn-bold">{line.slice(2, -2)}</p>
-    if (line.startsWith('- ')) return <div key={i} className="kn-li">{line}</div>
+    if (line.startsWith('- ')) return <div key={i} className="kn-li">{line.slice(2)}</div>
     if (line.startsWith('|')) return <div key={i} className="kn-table">{line}</div>
     if (line.trim()) return <p key={i} className="kn-text">{line}</p>
     return null
@@ -58,10 +60,10 @@ export default function CareerDetailPage() {
     try {
       const r = await api.post(`/api/careers/${id}/skills/${sid}/complete`)
       if (r.allDone) {
-        setToast('🎉 技能已全部完成，去参加结业考试吧！')
+        setToast('技能已全部完成，去参加结业考试吧！')
         setTimeout(() => setToast(''), 3000)
       } else {
-        setToast(`✓ ${r.message}`)
+        setToast(r.message)
         setTimeout(() => setToast(''), 2000)
       }
       load()
@@ -94,7 +96,7 @@ export default function CareerDetailPage() {
       setExam(null)
       setExamResult(r)
       if (r.passed) {
-        setToast(`🎉 ${r.message}`)
+        setToast(r.message)
         setTimeout(() => setToast(''), 4000)
         load()
       }
@@ -120,22 +122,40 @@ export default function CareerDetailPage() {
 
   return (
     <div>
-      <button className="btn-ghost" onClick={() => navigate('/careers')} style={{ marginBottom: 12 }}>← 职业广场</button>
+      <button className="btn-ghost" onClick={() => navigate('/careers')} style={{ marginBottom: 12 }}>
+        <Icon name="arrow-left" size={15} />
+        职业广场
+      </button>
 
-      {toast && <div className="career-toast">{toast}</div>}
+      {toast && (
+        <div className="career-toast">
+          <Icon name="check-circle" size={16} />
+          {toast}
+        </div>
+      )}
 
       <div className="card" style={{ '--career-color': career.color }}>
         <div className="career-detail-head">
-          <span className="career-icon-lg" style={{ background: `linear-gradient(135deg, ${career.color}, ${career.color}80)` }}>{career.icon}</span>
+          <span className="career-icon-lg" style={{ background: `linear-gradient(135deg, ${career.color}, ${career.color}80)` }}>
+            {emojiIconName(career.icon) ? <Icon name={emojiIconName(career.icon)} size={22} /> : career.icon}
+          </span>
           <div style={{ flex: 1 }}>
             <h1 className="section-title" style={{ margin: '0 0 4px' }}>{career.name}</h1>
             <p style={{ color: 'var(--theme-text-secondary)', margin: 0, fontSize: 14 }}>{career.description}</p>
           </div>
-          {completed && <span className="status-badge active">已完成 · 获得身份</span>}
+          {completed && (
+            <span className="status-badge active">
+              <Icon name="check" size={12} />
+              已完成 · 获得身份
+            </span>
+          )}
         </div>
 
         {!progress ? (
-          <button className="btn-primary" style={{ marginTop: 14 }} onClick={join}>加入学习</button>
+          <button className="btn-primary" style={{ marginTop: 14 }} onClick={join}>
+            <Icon name="plus" size={15} />
+            加入学习
+          </button>
         ) : (
           <div className="career-progress" style={{ marginTop: 14 }}>
             <div className="exp-bar"><div className="exp-fill" style={{ width: pct + '%', background: `linear-gradient(90deg, ${career.color}, ${career.color}aa)` }} /></div>
@@ -152,7 +172,9 @@ export default function CareerDetailPage() {
       {showExamEntry && (
         <div className="card exam-entry">
           <div className="exam-entry-head">
-            <span className="exam-entry-icon">🎓</span>
+            <span className="exam-entry-icon">
+              <Icon name="award" size={22} />
+            </span>
             <div style={{ flex: 1 }}>
               <h3 style={{ margin: '0 0 4px' }}>结业考试已解锁</h3>
               <p style={{ margin: 0, color: 'var(--theme-text-secondary)', fontSize: 13 }}>
@@ -161,7 +183,8 @@ export default function CareerDetailPage() {
             </div>
           </div>
           <button className="btn-primary" style={{ marginTop: 12 }} onClick={startExam} disabled={examBusy}>
-            {examBusy ? '出题中…' : '开始考试 →'}
+            {examBusy ? '出题中…' : '开始考试'}
+            {!examBusy && <Icon name="arrow-right" size={15} />}
           </button>
         </div>
       )}
@@ -170,7 +193,10 @@ export default function CareerDetailPage() {
       {exam && (
         <div className="exam-section">
           <div className="sort-bar" style={{ marginBottom: 12 }}>
-            <span className="tag active" style={{ cursor: 'default' }}>📝 结业考试 · {career.name}</span>
+            <span className="tag active" style={{ cursor: 'default' }}>
+              <Icon name="edit-3" size={13} />
+              结业考试 · {career.name}
+            </span>
             <span className="tag" style={{ cursor: 'default' }}>共 {exam.questions.length} 题</span>
             <span className="tag" style={{ cursor: 'default' }}>60 分合格</span>
           </div>
@@ -193,12 +219,16 @@ export default function CareerDetailPage() {
             </div>
           ))}
           <div className="exam-submit-row">
-            <button className="btn-ghost" onClick={() => { setExam(null); setExamResult(null) }}>放弃考试</button>
+            <button className="btn-ghost" onClick={() => { setExam(null); setExamResult(null) }}>
+              <Icon name="x" size={15} />
+              放弃考试
+            </button>
             <button
               className="btn-primary"
               disabled={examBusy || Object.keys(exam.answers).length < exam.questions.length}
               onClick={submitExam}
             >
+              <Icon name="check" size={15} />
               {examBusy ? '批改中…' : `交卷（已答 ${Object.keys(exam.answers).length}/${exam.questions.length}）`}
             </button>
           </div>
@@ -213,46 +243,67 @@ export default function CareerDetailPage() {
           </div>
           <div className="exam-verdict">
             {examResult.passed
-              ? `🎉 考试通过！答对 ${examResult.correctCount}/${examResult.total}，获得身份「${career.name}」`
+              ? `考试通过！答对 ${examResult.correctCount}/${examResult.total}，获得身份「${career.name}」`
               : `答对 ${examResult.correctCount}/${examResult.total}，未达 60 分合格线，再接再厉！`}
           </div>
           <div className="exam-breakdown">
             {examResult.results.map((r) => (
               <div key={r.questionId} className={'exam-bd ' + (r.correct ? 'ok' : 'bad')}>
-                <div className="bd-t">{r.correct ? '✓' : '✗'} {r.index}. {r.question}</div>
+                <div className="bd-t">
+                  <Icon name={r.correct ? 'check' : 'x'} size={13} /> {r.index}. {r.question}
+                </div>
                 {!r.correct && <div className="bd-d">你的答案：{r.yourAnswer || '未答'} · 正确答案：{r.correctAnswer}</div>}
-                {r.explanation && <div className="bd-e">💡 {r.explanation}</div>}
+                {r.explanation && (
+                  <div className="bd-e">
+                    <Icon name="info" size={13} />
+                    <span>{r.explanation}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
           {!examResult.passed && (
             <button className="btn-primary" onClick={startExam} disabled={examBusy}>
+              <Icon name="refresh-cw" size={15} />
               {examBusy ? '出题中…' : '重新考试'}
             </button>
           )}
         </div>
       )}
 
-      <h3 className="section-title" style={{ margin: '18px 0 12px' }}>技能路线</h3>
+      <h3 className="section-title" style={{ margin: '18px 0 12px' }}>
+        <Icon name="list" size={17} />
+        技能路线
+      </h3>
       <div className="career-grid">
         {skills.map((s, idx) => (
           <div className={'card skill-card' + (s.done ? ' done' : '')} key={s.id} style={{ '--career-color': career.color }}>
             <div className="skill-head">
-              <span className="skill-icon" style={{ background: `linear-gradient(135deg, ${career.color}, ${career.color}80)` }}>{s.done ? '✓' : (s.icon || '⭐')}</span>
+              <span className="skill-icon" style={{ background: `linear-gradient(135deg, ${career.color}, ${career.color}80)` }}>
+                {s.done ? (
+                  <Icon name="check" size={16} />
+                ) : (
+                  <Icon name={emojiIconName(s.icon) || 'star'} size={16} />
+                )}
+              </span>
               <div style={{ flex: 1 }}>
                 <h4 style={{ margin: '0 0 2px' }}>{idx + 1}. {s.name}</h4>
                 <div className="post-meta" style={{ margin: 0, fontSize: 12 }}>
-                  {s.done ? <span className="status-badge active">已完成</span> : <span>待学习</span>}
+                  {s.done ? <span className="status-badge active">已完成</span> : <span className="badge-locked">待学习</span>}
                 </div>
               </div>
             </div>
             <p className="career-desc">{s.description}</p>
             <div className="skill-actions">
               {s.knowledge && (
-                <button className="btn-ghost" onClick={() => setSelected(s)}>📖 学习知识</button>
+                <button className="btn-ghost" onClick={() => setSelected(s)}>
+                  <Icon name="book-open" size={15} />
+                  学习知识
+                </button>
               )}
               {progress && !completed && !s.done && (
                 <button className="btn-primary" disabled={completing === s.id} onClick={() => complete(s.id)}>
+                  <Icon name="check" size={15} />
                   {completing === s.id ? '提交中…' : '标记完成'}
                 </button>
               )}
@@ -267,10 +318,14 @@ export default function CareerDetailPage() {
           <div className="knowledge-modal" onClick={(e) => e.stopPropagation()}>
             <div className="knowledge-modal-head">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span className="skill-icon sm">{selected.icon}</span>
+                <span className="skill-icon sm" style={{ background: `linear-gradient(135deg, ${career.color}, ${career.color}80)` }}>
+                  <Icon name={emojiIconName(selected.icon) || 'star'} size={14} />
+                </span>
                 <h3 className="modal-title">{selected.name}</h3>
               </div>
-              <button className="modal-close" onClick={() => setSelected(null)}>✕</button>
+              <button className="modal-close" onClick={() => setSelected(null)} aria-label="关闭">
+                <Icon name="x" size={16} />
+              </button>
             </div>
             <div className="knowledge-body">{renderMd(selected.knowledge)}</div>
             <div className="knowledge-foot">
@@ -280,6 +335,7 @@ export default function CareerDetailPage() {
                   disabled={completing === selected.id}
                   onClick={() => { complete(selected.id); setSelected(null) }}
                 >
+                  <Icon name="check" size={15} />
                   {completing === selected.id ? '提交中…' : '我已掌握，标记完成'}
                 </button>
               )}

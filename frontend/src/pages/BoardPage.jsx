@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import api from '../api.js'
 import PostCard from '../components/PostCard.jsx'
+import Icon from '../components/Icon.jsx'
 
 export default function BoardPage() {
   const { slug } = useParams()
@@ -33,7 +34,10 @@ export default function BoardPage() {
 
   return (
     <div>
-      <h2 className="section-title">{title}</h2>
+      <h2 className="section-title">
+        <Icon name={slug === 'all' ? 'grid' : 'layers'} size={18} />
+        {title}
+      </h2>
       {loading && <div className="empty">加载中…</div>}
       {err && <div className="empty">加载失败：{err}</div>}
       {!loading && !err && posts.length === 0 && (

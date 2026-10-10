@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api.js'
+import Icon from '../components/Icon.jsx'
 
 function fmtSize(n) {
   n = Number(n || 0)
@@ -83,7 +84,10 @@ export default function CreatePostPage() {
 
   return (
     <div>
-      <h2 className="section-title">发布帖子</h2>
+      <h2 className="section-title">
+        <Icon name="edit-3" size={18} />
+        发布帖子
+      </h2>
       <form className="card" onSubmit={submit}>
         <label className="field-label">板块</label>
         <select className="select" value={boardSlug} onChange={(e) => setBoardSlug(e.target.value)}>
@@ -117,7 +121,8 @@ export default function CreatePostPage() {
         <label className="field-label">附件（可选，最多 10 个）</label>
         <div className="upload-row">
           <button type="button" className="btn-ghost" disabled={uploading} onClick={() => fileRef.current?.click()}>
-            {uploading ? '上传中…' : '📎 添加附件'}
+            <Icon name="paperclip" size={15} />
+            {uploading ? '上传中…' : '添加附件'}
           </button>
           <input ref={fileRef} type="file" style={{ display: 'none' }} onChange={pickFile} />
         </div>
@@ -125,16 +130,21 @@ export default function CreatePostPage() {
           <div className="file-list">
             {attFiles.map((f) => (
               <div className="file-item" key={f.id}>
-                <span className="fi-ic">📎</span>
+                <span className="fi-ic">
+                  <Icon name="paperclip" size={15} />
+                </span>
                 <span className="fi-name">{f.name}</span>
                 <span className="fi-size">{fmtSize(f.size)}</span>
-                <button type="button" className="fi-remove" onClick={() => removeAtt(f.id)}>✕</button>
+                <button type="button" className="fi-remove" onClick={() => removeAtt(f.id)} title="移除">
+                  <Icon name="x" size={14} />
+                </button>
               </div>
             ))}
           </div>
         )}
         {err && <div className="error-text">{err}</div>}
         <button className="btn-primary" type="submit" disabled={busy}>
+          <Icon name="send" size={15} />
           {busy ? '发布中…' : '发布'}
         </button>
       </form>

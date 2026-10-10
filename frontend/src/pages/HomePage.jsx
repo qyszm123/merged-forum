@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import PostCard from '../components/PostCard.jsx'
 import ForumAnnounceModal from '../components/ForumAnnounceModal.jsx'
+import Icon from '../components/Icon.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
 const SORTS = [
@@ -86,7 +87,8 @@ export default function HomePage() {
             <p>在奇遇广场，分享灵感、组队共创、答疑解惑。</p>
           </div>
           <button className="btn-primary" onClick={() => navigate('/create')}>
-            ✏️ 发布新帖
+            <Icon name="edit-3" size={16} />
+            发布新帖
           </button>
         </div>
       )}
@@ -125,16 +127,21 @@ export default function HomePage() {
         </div>
       ) : err ? (
         <div className="empty">
-          <div className="empty-ic">😵</div>
+          <div className="empty-ic"><Icon name="alert-circle" size={30} /></div>
           <p>加载失败：{err}</p>
           <button className="btn-ghost" onClick={() => setTick((t) => t + 1)}>重试</button>
         </div>
       ) : posts.length === 0 ? (
         <div className="empty">
-          <div className="empty-ic">{q ? '🔍' : '🌱'}</div>
+          <div className="empty-ic">
+            <Icon name={q ? 'search' : 'feather'} size={30} />
+          </div>
           <p>{q ? '没有找到相关帖子，换个关键词试试' : '这里还很安静，来发第一帖吧'}</p>
           {!q && (
-            <button className="btn-primary" onClick={() => navigate('/create')}>✏️ 发帖</button>
+            <button className="btn-primary" onClick={() => navigate('/create')}>
+              <Icon name="edit-3" size={16} />
+              发帖
+            </button>
           )}
         </div>
       ) : (

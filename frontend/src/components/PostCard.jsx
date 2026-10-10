@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { timeAgo, isOnline, stripMarkdown } from '../utils/format.js'
+import { emojiIconName } from '../utils/icons.js'
+import Icon from './Icon.jsx'
 import ReportButton from './ReportButton.jsx'
 
 export default function PostCard({ post }) {
@@ -43,16 +45,25 @@ export default function PostCard({ post }) {
   const author = post.author || {}
   const online = isOnline(author.id)
   const isOwn = !!user && Number(author.id) === Number(user.id)
+  const badgeName = emojiIconName(author.badge?.icon)
 
   return (
     <article className="card post-card" onClick={openPost}>
       <div className="post-card-top">
         <div className="post-card-titlerow">
-          <h3 className="post-title">
-            {post.title}
-            {post.isPinned && <span className="flag flag-pin">置顶</span>}
-            {post.isHot && <span className="flag flag-hot">热门</span>}
-          </h3>
+          {post.isPinned && (
+            <span className="flag flag-pin" title="置顶">
+              <Icon name="map-pin" size={11} />
+              置顶
+            </span>
+          )}
+          {post.isHot && (
+            <span className="flag flag-hot" title="热门">
+              <Icon name="trending-up" size={11} />
+              热门
+            </span>
+          )}
+          <h3 className="post-title">{post.title}</h3>
         </div>
         {excerpt && <p className="post-excerpt">{excerpt}</p>}
       </div>
@@ -74,19 +85,39 @@ export default function PostCard({ post }) {
             {author.avatarChar || '?'}
           </span>
           <span className="author-name">{author.name || '匿名'}</span>
-          {author.badge && <span className="badge-mini" title={author.badge.name}>{author.badge.icon}</span>}
+          {author.badge && (
+            <span className="badge-mini" title={author.badge.name}>
+              {badgeName ? <Icon name={badgeName} size={13} /> : author.badge.icon}
+            </span>
+          )}
           <span className="board-pill">{post.board?.title || '综合'}</span>
         </div>
         <div className="post-card-meta">
           <span className="time">{timeAgo(post.createdAt)}</span>
-          <span className="act" onClick={toggleLike}>
-            {liked ? '❤️' : '🤍'} {likeCount}
+          <span
+            className={'act' + (liked ? ' is-liked' : '')}
+            onClick={toggleLike}
+            title="点赞"
+          >
+            <Icon name="thumbs-up" size={15} strokeWidth={liked ? 2.4 : 2} />
+            {likeCount}
           </span>
-          <span className="act" onClick={toggleBookmark}>
-            {bookmarked ? '⭐' : '☆'} {bookmarkCount}
+          <span
+            className={'act' + (bookmarked ? ' bookmarked' : '')}
+            onClick={toggleBookmark}
+            title="收藏"
+          >
+            <Icon name="bookmark" size={15} strokeWidth={bookmarked ? 2.4 : 2} />
+            {bookmarkCount}
           </span>
-          <span className="act">💬 {post.commentCount || 0}</span>
-          <span className="act">👁️ {post.viewCount || 0}</span>
+          <span className="act" title="评论数">
+            <Icon name="message-circle" size={15} />
+            {post.commentCount || 0}
+          </span>
+          <span className="act" title="浏览数">
+            <Icon name="eye" size={15} />
+            {post.viewCount || 0}
+          </span>
           <ReportButton kind="post" id={post.id} own={isOwn} />
         </div>
       </div>

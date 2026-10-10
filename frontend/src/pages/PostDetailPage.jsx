@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { emojiIconName } from '../utils/icons.js'
+import Icon from '../components/Icon.jsx'
 
 function timeAgo(s) {
   if (!s) return ''
@@ -47,7 +49,9 @@ function ReportForm({ reason, setReason, submitting, onSubmit, onCancel, title }
         onChange={(e) => setReason(e.target.value)}
       />
       <div className="report-actions">
-        <button className="btn-ghost" type="button" onClick={onCancel}>取消</button>
+        <button className="btn-ghost" type="button" onClick={onCancel}>
+          取消
+        </button>
         <button className="btn-primary danger" type="submit" disabled={submitting || !reason.trim()}>
           {submitting ? '提交中…' : '提交举报'}
         </button>
@@ -156,15 +160,24 @@ export default function PostDetailPage() {
   return (
     <div>
       <button className="btn-ghost" onClick={() => navigate(-1)} style={{ marginBottom: 12 }}>
-        ← 返回
+        <Icon name="arrow-left" size={15} />
+        返回
       </button>
       <div className="card">
         <div className="post-meta">
           <span className="avatar sm">{post.author?.avatarChar || '?'}</span>
           <span className="author">{post.author?.name || '匿名'}</span>
-          {post.author?.badge && <span className="badge-mini" title={post.author.badge.name}>{post.author.badge.icon}</span>}
+          {post.author?.badge && (
+            <span className="badge-mini" title={post.author.badge.name}>
+              {emojiIconName(post.author.badge.icon) ? (
+                <Icon name={emojiIconName(post.author.badge.icon)} size={14} />
+              ) : (
+                post.author.badge.icon
+              )}
+            </span>
+          )}
           <span className="board-pill">{post.board?.title || '综合'}</span>
-          <span>· {timeAgo(post.createdAt)}</span>
+          <span className="comment-time">· {timeAgo(post.createdAt)}</span>
         </div>
         <h1 className="detail-title">{post.title}</h1>
         <div className="detail-content">{post.content}</div>
@@ -174,7 +187,9 @@ export default function PostDetailPage() {
             <div className="file-list">
               {post.attachments.map((f) => (
                 <a key={f.id} className="file-item" href={`${f.url}?token=${encodeURIComponent(localStorage.getItem('token') || '')}`} target="_blank" rel="noreferrer">
-                  <span className="fi-ic">📎</span>
+                  <span className="fi-ic">
+                    <Icon name="paperclip" size={15} />
+                  </span>
                   <span className="fi-name">{f.name}</span>
                   <span className="fi-size">{fmtSize(f.size)}</span>
                 </a>
@@ -183,20 +198,29 @@ export default function PostDetailPage() {
           </div>
         )}
         <div className="post-actions" style={{ marginTop: 16 }}>
-          <span className={'act' + (liked ? ' liked' : '')} onClick={toggleLike}>
-            {liked ? '❤️' : '🤍'} {likeCount}
+          <span className={'act' + (liked ? ' liked' : '')} onClick={toggleLike} title="点赞">
+            <Icon name="thumbs-up" size={16} strokeWidth={liked ? 2.4 : 2} />
+            {likeCount}
           </span>
-          <span className={'act' + (bookmarked ? ' bookmarked' : '')} onClick={toggleBookmark}>
-            {bookmarked ? '⭐' : '☆'} {bookmarkCount}
+          <span className={'act' + (bookmarked ? ' bookmarked' : '')} onClick={toggleBookmark} title="收藏">
+            <Icon name="bookmark" size={16} strokeWidth={bookmarked ? 2.4 : 2} />
+            {bookmarkCount}
           </span>
-          <span className="act">💬 {post.commentCount || 0}</span>
-          <span className="act">👁️ {post.viewCount || 0}</span>
+          <span className="act" title="评论数">
+            <Icon name="message-circle" size={16} />
+            {post.commentCount || 0}
+          </span>
+          <span className="act" title="浏览数">
+            <Icon name="eye" size={16} />
+            {post.viewCount || 0}
+          </span>
           <span
             className={'act report-btn' + (isOwnPost ? ' is-disabled' : '')}
             onClick={() => !isOwnPost && openReport('post')}
             title={isOwnPost ? '不能举报自己的帖子' : '举报该帖子'}
           >
-            🚩 举报
+            <Icon name="flag" size={16} />
+            举报
           </span>
         </div>
 
@@ -212,7 +236,10 @@ export default function PostDetailPage() {
         )}
       </div>
 
-      <h3 className="section-title">评论 {post.comments?.length || 0}</h3>
+      <h3 className="section-title">
+        <Icon name="message-square" size={17} />
+        评论 {post.comments?.length || 0}
+      </h3>
       {user ? (
         <form className="comment-form" onSubmit={submitComment}>
           <span className="avatar sm">{user.avatarChar}</span>
@@ -223,7 +250,10 @@ export default function PostDetailPage() {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
           />
-          <button className="btn-primary" type="submit">发送</button>
+          <button className="btn-primary" type="submit">
+            <Icon name="send" size={15} />
+            发送
+          </button>
         </form>
       ) : (
         <div className="empty">登录后可参与评论</div>
@@ -239,7 +269,15 @@ export default function PostDetailPage() {
               <div className="comment-head">
                 <div>
                   <span className="nm">{c.author?.name || '匿名'}</span>
-                  {c.author?.badge && <span className="badge-mini" title={c.author.badge.name}>{c.author.badge.icon}</span>}
+                  {c.author?.badge && (
+                    <span className="badge-mini" title={c.author.badge.name}>
+                      {emojiIconName(c.author.badge.icon) ? (
+                        <Icon name={emojiIconName(c.author.badge.icon)} size={13} />
+                      ) : (
+                        c.author.badge.icon
+                      )}
+                    </span>
+                  )}
                   <span className="comment-time">· {timeAgo(c.createdAt)}</span>
                 </div>
                 <span
@@ -247,7 +285,8 @@ export default function PostDetailPage() {
                   onClick={() => !isOwn && openReport({ commentId: c.id })}
                   title={isOwn ? '不能举报自己的评论' : '举报该评论'}
                 >
-                  🚩 举报
+                  <Icon name="flag" size={13} />
+                  举报
                 </span>
               </div>
               <div className="tx">{c.content}</div>

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { describeBadgeCondition } from '../utils/format.js'
+import { emojiIconName } from '../utils/icons.js'
+import Icon from '../components/Icon.jsx'
 
 function timeAgo(s) {
   if (!s) return '-'
@@ -26,6 +28,28 @@ const ROLE_LABEL = {
 }
 const REPORT_STATUS = { pending: '待处理', resolved: '已采纳', dismissed: '已驳回' }
 
+const TABS = [
+  { k: 'invites', l: '邀请码', icon: 'key' },
+  { k: 'posts', l: '帖子管理', icon: 'file-text' },
+  { k: 'users', l: '账号管理', icon: 'users' },
+  { k: 'reports', l: '举报审核', icon: 'flag' },
+  { k: 'badges', l: '勋章管理', icon: 'award' }
+]
+
+const INVITE_FILTERS = [
+  ['all', '全部', 'list'],
+  ['active', '可用', 'check-circle'],
+  ['used', '已使用', 'check'],
+  ['disabled', '已作废', 'x-circle']
+]
+
+const REPORT_FILTERS = [
+  ['pending', '待处理', 'clock'],
+  ['resolved', '已采纳', 'check-circle'],
+  ['dismissed', '已驳回', 'x-circle'],
+  ['all', '全部', 'list']
+]
+
 export default function AdminPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -39,13 +63,22 @@ export default function AdminPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ margin: '0 0 16px' }}>🛡️ 管理后台</h2>
+      <h2 className="section-title" style={{ margin: '0 0 16px' }}>
+        <Icon name="shield" size={18} />
+        管理后台
+      </h2>
       <div className="sort-bar" style={{ marginBottom: 18, flexWrap: 'wrap' }}>
-        <button className={'tag' + (tab === 'invites' ? ' active' : '')} style={{ cursor: 'pointer' }} onClick={() => setTab('invites')}>🎟️ 邀请码</button>
-        <button className={'tag' + (tab === 'posts' ? ' active' : '')} style={{ cursor: 'pointer' }} onClick={() => setTab('posts')}>📝 帖子管理</button>
-        <button className={'tag' + (tab === 'users' ? ' active' : '')} style={{ cursor: 'pointer' }} onClick={() => setTab('users')}>👥 账号管理</button>
-        <button className={'tag' + (tab === 'reports' ? ' active' : '')} style={{ cursor: 'pointer' }} onClick={() => setTab('reports')}>🚩 举报审核</button>
-        <button className={'tag' + (tab === 'badges' ? ' active' : '')} style={{ cursor: 'pointer' }} onClick={() => setTab('badges')}>🏅 勋章管理</button>
+        {TABS.map((t) => (
+          <button
+            key={t.k}
+            className={'tag' + (tab === t.k ? ' active' : '')}
+            style={{ cursor: 'pointer' }}
+            onClick={() => setTab(t.k)}
+          >
+            <Icon name={t.icon} size={13} />
+            {t.l}
+          </button>
+        ))}
       </div>
 
       {tab === 'invites' && <InvitesTab />}
@@ -126,22 +159,36 @@ function InvitesTab() {
           <div style={{ width: 130 }}>
             <input className="input" type="number" min="1" max="365" placeholder="有效天数（空=永久）" value={days} onChange={(e) => setDays(e.target.value)} />
           </div>
-          <button className="btn-primary" type="submit" disabled={busy}>{busy ? '生成中…' : '生成'}</button>
+          <button className="btn-primary" type="submit" disabled={busy}>
+            <Icon name="plus" size={15} />
+            {busy ? '生成中…' : '生成'}
+          </button>
         </div>
         {formErr && <div className="error-text">{formErr}</div>}
         {newCodes.length > 0 && (
           <div className="new-codes">
             <div className="field-label">新生成的邀请码（点击复制）</div>
             {newCodes.map((c) => (
-              <span className="code-pill" key={c.id} onClick={() => copy(c.code)} title="点击复制">{c.code} 📋</span>
+              <span className="code-pill" key={c.id} onClick={() => copy(c.code)} title="点击复制">
+                {c.code}
+                <Icon name="copy" size={13} />
+              </span>
             ))}
           </div>
         )}
       </form>
 
       <div className="sort-bar" style={{ marginTop: 16 }}>
-        {[['all', '全部'], ['active', '可用'], ['used', '已使用'], ['disabled', '已作废']].map(([k, l]) => (
-          <button key={k} className={'tag' + (status === k ? ' active' : '')} style={{ cursor: 'pointer' }} onClick={() => setStatus(k)}>{l}</button>
+        {INVITE_FILTERS.map(([k, l, ic]) => (
+          <button
+            key={k}
+            className={'tag' + (status === k ? ' active' : '')}
+            style={{ cursor: 'pointer' }}
+            onClick={() => setStatus(k)}
+          >
+            <Icon name={ic} size={13} />
+            {l}
+          </button>
         ))}
       </div>
 
@@ -163,8 +210,16 @@ function InvitesTab() {
             {c.expiresAt && <span>· 过期 {c.expiresAt.slice(0, 10)}</span>}
           </div>
           <div className="admin-row-actions">
-            <button className="btn-ghost" onClick={() => copy(c.code)}>复制</button>
-            {c.status === 'active' && <button className="btn-ghost" onClick={() => disable(c.id)}>作废</button>}
+            <button className="btn-ghost" onClick={() => copy(c.code)}>
+              <Icon name="copy" size={14} />
+              复制
+            </button>
+            {c.status === 'active' && (
+              <button className="btn-ghost danger" onClick={() => disable(c.id)}>
+                <Icon name="x-circle" size={14} />
+                作废
+              </button>
+            )}
           </div>
         </div>
       ))}
@@ -203,7 +258,10 @@ function PostsTab({ navigate }) {
     <div>
       <form className="search-inline" onSubmit={(e) => { e.preventDefault(); load() }} style={{ marginBottom: 14 }}>
         <input className="input" placeholder="搜索标题或作者…" value={q} onChange={(e) => setQ(e.target.value)} style={{ marginBottom: 0 }} />
-        <button className="btn-primary" type="submit">搜索</button>
+        <button className="btn-primary" type="submit">
+          <Icon name="search" size={15} />
+          搜索
+        </button>
       </form>
 
       {loading && <div className="empty">加载中…</div>}
@@ -214,16 +272,27 @@ function PostsTab({ navigate }) {
         <div className="card admin-row-card" key={p.id}>
           <div className="admin-row-top">
             <h3 className="post-title" style={{ margin: 0, flex: 1 }} onClick={() => navigate(`/post/${p.id}`)}>{p.title}</h3>
-            <button className="btn-ghost danger" onClick={() => del(p.id, p.title)}>🗑 删除</button>
+            <button className="btn-ghost danger" onClick={() => del(p.id, p.title)}>
+              <Icon name="trash-2" size={14} />
+              删除
+            </button>
           </div>
           <div className="post-meta">
             <span className="avatar sm">{p.author?.avatarChar || '?'}</span>
             <span className="author">{p.author?.name || '匿名'}</span>
             {p.board && <span className="board-pill">{p.board.name}</span>}
-            <span>· 👁 {p.viewCount}</span>
-            <span>· 💬 {p.commentCount}</span>
-            <span>· ❤ {p.likeCount}</span>
-            <span>· {timeAgo(p.createdAt)}</span>
+            <span className="comment-time">
+              <Icon name="eye" size={12} /> {p.viewCount}
+            </span>
+            <span className="comment-time">
+              <Icon name="message-circle" size={12} /> {p.commentCount}
+            </span>
+            <span className="comment-time">
+              <Icon name="thumbs-up" size={12} /> {p.likeCount}
+            </span>
+            <span className="comment-time">
+              <Icon name="clock" size={12} /> {timeAgo(p.createdAt)}
+            </span>
           </div>
         </div>
       ))}
@@ -274,7 +343,10 @@ function UsersTab({ me }) {
     <div>
       <form className="search-inline" onSubmit={(e) => { e.preventDefault(); load() }} style={{ marginBottom: 14 }}>
         <input className="input" placeholder="搜索学号或昵称…" value={q} onChange={(e) => setQ(e.target.value)} style={{ marginBottom: 0 }} />
-        <button className="btn-primary" type="submit">搜索</button>
+        <button className="btn-primary" type="submit">
+          <Icon name="search" size={15} />
+          搜索
+        </button>
       </form>
 
       {loading && <div className="empty">加载中…</div>}
@@ -316,6 +388,7 @@ function UsersTab({ me }) {
                 disabled={busyId === u.id || !roleDraft[u.id] || roleDraft[u.id] === u.role}
                 onClick={() => applyRole(u)}
               >
+                <Icon name="check" size={14} />
                 {busyId === u.id ? '保存中…' : '应用'}
               </button>
             </div>
@@ -361,8 +434,16 @@ function ReportsTab({ navigate }) {
   return (
     <div>
       <div className="sort-bar" style={{ marginBottom: 14 }}>
-        {[['pending', '待处理'], ['resolved', '已采纳'], ['dismissed', '已驳回'], ['all', '全部']].map(([k, l]) => (
-          <button key={k} className={'tag' + (status === k ? ' active' : '')} style={{ cursor: 'pointer' }} onClick={() => setStatus(k)}>{l}</button>
+        {REPORT_FILTERS.map(([k, l, ic]) => (
+          <button
+            key={k}
+            className={'tag' + (status === k ? ' active' : '')}
+            style={{ cursor: 'pointer' }}
+            onClick={() => setStatus(k)}
+          >
+            <Icon name={ic} size={13} />
+            {l}
+          </button>
         ))}
       </div>
 
@@ -375,7 +456,8 @@ function ReportsTab({ navigate }) {
           <div className="admin-row-top">
             <span className={'status-badge ' + r.status}>{REPORT_STATUS[r.status] || r.status}</span>
             <span className="role-badge" style={{ flexShrink: 0 }}>
-              {r.type === 'comment' ? '💬 评论' : '📝 帖子'}
+              <Icon name={r.type === 'comment' ? 'message-circle' : 'file-text'} size={12} />
+              {r.type === 'comment' ? '评论' : '帖子'}
             </span>
             {r.post ? (
               <h3 className="post-title" style={{ margin: 0, flex: 1 }} onClick={() => navigate(`/post/${r.post.id}`)}>{r.post.title}</h3>
@@ -412,10 +494,17 @@ function ReportsTab({ navigate }) {
                 disabled={busy[r.id]}
                 onClick={() => resolve(r.id, 'resolved', true, r.type === 'comment' ? '评论' : '帖子')}
               >
-                {r.type === 'comment' ? '🗑 采纳并删评论' : '🗑 采纳并删帖'}
+                <Icon name="trash-2" size={14} />
+                {r.type === 'comment' ? '采纳并删评论' : '采纳并删帖'}
               </button>
-              <button className="btn-ghost" disabled={busy[r.id]} onClick={() => resolve(r.id, 'resolved')}>✓ 采纳</button>
-              <button className="btn-ghost" disabled={busy[r.id]} onClick={() => resolve(r.id, 'dismissed')}>驳回</button>
+              <button className="btn-ghost" disabled={busy[r.id]} onClick={() => resolve(r.id, 'resolved')}>
+                <Icon name="check" size={14} />
+                采纳
+              </button>
+              <button className="btn-ghost" disabled={busy[r.id]} onClick={() => resolve(r.id, 'dismissed')}>
+                <Icon name="x" size={14} />
+                驳回
+              </button>
             </div>
           )}
         </div>
@@ -552,7 +641,10 @@ function BadgesTab() {
             {CONDITION_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
           <input className="input" style={{ width: 90 }} type="number" min="1" placeholder="阈值" value={form.conditionValue} onChange={(e) => setForm({ ...form, conditionValue: e.target.value })} required />
-          <button className="btn-primary" type="submit" disabled={busy}>{busy ? '创建中…' : '创建'}</button>
+          <button className="btn-primary" type="submit" disabled={busy}>
+            <Icon name="plus" size={15} />
+            {busy ? '创建中…' : '创建'}
+          </button>
         </div>
         {formErr && <div className="error-text">{formErr}</div>}
       </form>
@@ -563,7 +655,9 @@ function BadgesTab() {
       {list.map((b) => (
         <div className="card admin-row-card" key={b.id}>
           <div className="admin-row-top">
-            <span className="badge-icon" style={{ fontSize: 22 }}>{b.icon}</span>
+            <span className="badge-icon">
+              {emojiIconName(b.icon) ? <Icon name={emojiIconName(b.icon)} size={20} /> : b.icon}
+            </span>
             <strong style={{ flex: 1 }}>{b.name}</strong>
             <span className={'status-badge ' + (b.isActive ? 'active' : 'disabled')}>{b.isActive ? '启用' : '停用'}</span>
             <span className="badge-cond" style={{ fontSize: 12 }}>{describeBadgeCondition(b.conditionType, b.conditionValue)}</span>
@@ -573,8 +667,14 @@ function BadgesTab() {
             <span>· {b.holderCount} 人持有</span>
           </div>
           <div className="admin-row-actions">
-            <button className="btn-ghost" onClick={() => toggleActive(b)}>{b.isActive ? '停用' : '启用'}</button>
-            <button className="btn-ghost danger" onClick={() => del(b)}>删除</button>
+            <button className="btn-ghost" onClick={() => toggleActive(b)}>
+              <Icon name={b.isActive ? 'x-circle' : 'check-circle'} size={14} />
+              {b.isActive ? '停用' : '启用'}
+            </button>
+            <button className="btn-ghost danger" onClick={() => del(b)}>
+              <Icon name="trash-2" size={14} />
+              删除
+            </button>
           </div>
         </div>
       ))}
@@ -583,7 +683,10 @@ function BadgesTab() {
         <div className="field-label">授予 / 撤销勋章</div>
         <div className="admin-row">
           <input className="input" style={{ flex: 1 }} placeholder="输入学号查找用户" value={studentNo} onChange={(e) => setStudentNo(e.target.value)} />
-          <button className="btn-primary" onClick={findUser}>查找</button>
+          <button className="btn-primary" onClick={findUser}>
+            <Icon name="search" size={15} />
+            查找
+          </button>
         </div>
         {targetUser && (
           <>
@@ -597,12 +700,20 @@ function BadgesTab() {
                 const owned = ownedIds.has(b.id)
                 return (
                   <div key={b.id} className={'admin-badge-item' + (owned ? ' owned' : '')}>
-                    <span className="badge-icon">{b.icon}</span>
+                    <span className="badge-icon">
+                      {emojiIconName(b.icon) ? <Icon name={emojiIconName(b.icon)} size={15} /> : b.icon}
+                    </span>
                     <span className="badge-name">{b.name}</span>
                     {owned ? (
-                      <button className="btn-ghost danger" onClick={() => revoke(b.id)}>撤销</button>
+                      <button className="btn-ghost danger" onClick={() => revoke(b.id)}>
+                        <Icon name="x" size={13} />
+                        撤销
+                      </button>
                     ) : (
-                      <button className="btn-ghost" onClick={() => grant(b.id)}>授予</button>
+                      <button className="btn-ghost" onClick={() => grant(b.id)}>
+                        <Icon name="plus" size={13} />
+                        授予
+                      </button>
                     )}
                   </div>
                 )

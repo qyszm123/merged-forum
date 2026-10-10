@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import Icon from './Icon.jsx'
 
 export const REPORT_PRESETS = ['垃圾广告', '违法违规', '人身攻击', '抄袭内容', '其他']
 
@@ -38,7 +39,9 @@ export function ReportForm({ submitting, onSubmit, onCancel, title = '举报' })
         onChange={(e) => setReason(e.target.value)}
       />
       <div className="report-actions">
-        <button className="btn-ghost" type="button" onClick={onCancel}>取消</button>
+        <button className="btn-ghost" type="button" onClick={onCancel}>
+          取消
+        </button>
         <button className="btn-primary danger" type="submit" disabled={submitting || !reason.trim()}>
           {submitting ? '提交中…' : '提交举报'}
         </button>
@@ -91,7 +94,8 @@ export default function ReportButton({ kind, id, own = false }) {
         onClick={handleClick}
         title={own ? '不能举报自己的内容' : '举报'}
       >
-        🚩
+        <Icon name="flag" size={13} />
+        举报
       </span>
       {open && (
         <ReportForm

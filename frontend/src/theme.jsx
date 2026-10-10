@@ -1,105 +1,256 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
-// 8 套主题：默认深色（靛紫 #667eea → #764ba2 渐变）
+/**
+ * 奇遇广场 · 主题系统
+ *
+ * 每套主题提供同一组语义 token，切换时写入 :root 的 CSS 变量。
+ * token 分五组：
+ *   品牌   primary / secondary / accent / gradient
+ *   表面   background（页面底）→ surface（卡片）→ surfaceLight（内嵌/悬浮）→ surfaceElevated（浮层）
+ *   描边   border（常规分割） / borderStrong（需要强调的边界）
+ *   文字   text / textSecondary / textMuted（三级，均已按 WCAG AA 校过对比度）
+ *   状态   success / warning / error
+ *
+ * icon 使用的是 Feather 图标名（见 components/Icon.jsx），不再是 emoji。
+ */
+
+const LIGHT = 'light'
+const DARK = 'dark'
+
 export const themes = {
-  dark: {
-    name: '深色', icon: '🌙',
-    primary: '#667eea', secondary: '#764ba2',
-    background: '#0d0d0d', surface: '#1a1a2e', surfaceLight: '#252542',
-    border: 'rgba(255,255,255,0.1)', text: '#ffffff', textSecondary: '#a0a0a0',
-    textMuted: '#666666', accent: '#667eea', success: '#10b981', warning: '#f59e0b',
-    error: '#ef4444', shadow: 'rgba(0,0,0,0.5)',
-    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-  },
   light: {
-    name: '浅色', icon: '☀️',
-    primary: '#4F6EF7', secondary: '#2DD4BF',
-    background: '#F8FAFC', surface: '#FFFFFF', surfaceLight: '#F1F5F9',
-    border: '#E2E8F0', text: '#0F172A', textSecondary: '#475569',
-    textMuted: '#94A3B8', accent: '#4F6EF7', success: '#10B981', warning: '#F59E0B',
-    error: '#EF4444', shadow: 'rgba(15, 23, 42, 0.08)',
+    name: '浅色',
+    icon: 'sun',
+    mode: LIGHT,
+    primary: '#4F6EF7',
+    secondary: '#2DD4BF',
+    accent: '#4F6EF7',
+    background: '#F6F8FC',
+    surface: '#FFFFFF',
+    surfaceLight: '#F1F5F9',
+    surfaceElevated: '#FFFFFF',
+    border: '#E4E9F2',
+    borderStrong: '#CBD5E1',
+    text: '#0F172A',
+    textSecondary: '#475569',
+    textMuted: '#64748B',
+    success: '#0E9F6E',
+    warning: '#D97706',
+    error: '#DC2626',
+    shadow: 'rgba(15, 23, 42, 0.10)',
     gradient: 'linear-gradient(135deg, #4F6EF7 0%, #2DD4BF 100%)'
   },
+
+  dark: {
+    name: '深色',
+    icon: 'moon',
+    mode: DARK,
+    primary: '#7C8CFF',
+    secondary: '#A78BFA',
+    accent: '#7C8CFF',
+    background: '#0B0D14',
+    surface: '#141826',
+    surfaceLight: '#1D2233',
+    surfaceElevated: '#232A3D',
+    border: 'rgba(255, 255, 255, 0.09)',
+    borderStrong: 'rgba(255, 255, 255, 0.17)',
+    text: '#F5F7FA',
+    textSecondary: '#A8B2C6',
+    textMuted: '#7D879C',
+    success: '#34D399',
+    warning: '#FBBF24',
+    error: '#F87171',
+    shadow: 'rgba(0, 0, 0, 0.5)',
+    gradient: 'linear-gradient(135deg, #7C8CFF 0%, #A78BFA 100%)'
+  },
+
   ocean: {
-    name: '海洋', icon: '🌊',
-    primary: '#0ea5e9', secondary: '#06b6d4',
-    background: '#0c1929', surface: '#16213e', surfaceLight: '#1f3460',
-    border: 'rgba(14,165,233,0.2)', text: '#ffffff', textSecondary: '#93c5fd',
-    textMuted: '#64748b', accent: '#0ea5e9', success: '#22d3ee', warning: '#fbbf24',
-    error: '#f87171', shadow: 'rgba(14,165,233,0.2)',
-    gradient: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)'
+    name: '海洋',
+    icon: 'droplet',
+    mode: DARK,
+    primary: '#38BDF8',
+    secondary: '#22D3EE',
+    accent: '#38BDF8',
+    background: '#08131F',
+    surface: '#0F1E33',
+    surfaceLight: '#17293F',
+    surfaceElevated: '#1D3350',
+    border: 'rgba(125, 196, 255, 0.16)',
+    borderStrong: 'rgba(125, 196, 255, 0.30)',
+    text: '#EAF4FF',
+    textSecondary: '#9FC3E0',
+    textMuted: '#6E90AD',
+    success: '#2DD4BF',
+    warning: '#FBBF24',
+    error: '#F87171',
+    shadow: 'rgba(2, 12, 24, 0.55)',
+    gradient: 'linear-gradient(135deg, #0EA5E9 0%, #22D3EE 100%)'
   },
+
   forest: {
-    name: '森林', icon: '🌲',
-    primary: '#22c55e', secondary: '#10b981',
-    background: '#052e16', surface: '#14532d', surfaceLight: '#166534',
-    border: 'rgba(34,197,94,0.2)', text: '#dcfce7', textSecondary: '#bbf7d0',
-    textMuted: '#64748b', accent: '#22c55e', success: '#4ade80', warning: '#fbbf24',
-    error: '#f87171', shadow: 'rgba(34,197,94,0.2)',
-    gradient: 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)'
+    name: '森林',
+    icon: 'feather',
+    mode: DARK,
+    primary: '#34D399',
+    secondary: '#6EE7B7',
+    accent: '#34D399',
+    background: '#071A11',
+    surface: '#0F2A1C',
+    surfaceLight: '#163725',
+    surfaceElevated: '#1C4430',
+    border: 'rgba(134, 239, 172, 0.16)',
+    borderStrong: 'rgba(134, 239, 172, 0.32)',
+    text: '#E8FBEF',
+    textSecondary: '#A9D9BC',
+    textMuted: '#71A388',
+    success: '#4ADE80',
+    warning: '#FBBF24',
+    error: '#F87171',
+    shadow: 'rgba(2, 16, 10, 0.55)',
+    gradient: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)'
   },
+
   sunset: {
-    name: '日落', icon: '🌅',
-    primary: '#f97316', secondary: '#ef4444',
-    background: '#1c1917', surface: '#292524', surfaceLight: '#3f3a35',
-    border: 'rgba(249,115,22,0.2)', text: '#fef3c7', textSecondary: '#fed7aa',
-    textMuted: '#64748b', accent: '#f97316', success: '#22c55e', warning: '#eab308',
-    error: '#f87171', shadow: 'rgba(249,115,22,0.2)',
-    gradient: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)'
+    name: '日落',
+    icon: 'sunset',
+    mode: DARK,
+    primary: '#FB923C',
+    secondary: '#F87171',
+    accent: '#FB923C',
+    background: '#17120F',
+    surface: '#241B17',
+    surfaceLight: '#30241E',
+    surfaceElevated: '#3B2C24',
+    border: 'rgba(251, 146, 60, 0.18)',
+    borderStrong: 'rgba(251, 146, 60, 0.34)',
+    text: '#FCEFE4',
+    textSecondary: '#D9B49B',
+    textMuted: '#A8836C',
+    success: '#4ADE80',
+    warning: '#FBBF24',
+    error: '#F87171',
+    shadow: 'rgba(20, 10, 5, 0.55)',
+    gradient: 'linear-gradient(135deg, #F97316 0%, #EF4444 100%)'
   },
+
   purple: {
-    name: '紫霞', icon: '💜',
-    primary: '#a855f7', secondary: '#d946ef',
-    background: '#1a0a2e', surface: '#2d1b4e', surfaceLight: '#3d2a6b',
-    border: 'rgba(168,85,247,0.2)', text: '#f3e8ff', textSecondary: '#c4b5fd',
-    textMuted: '#64748b', accent: '#a855f7', success: '#22c55e', warning: '#fbbf24',
-    error: '#f87171', shadow: 'rgba(168,85,247,0.2)',
-    gradient: 'linear-gradient(135deg, #a855f7 0%, #d946ef 100%)'
+    name: '紫霞',
+    icon: 'star',
+    mode: DARK,
+    primary: '#C084FC',
+    secondary: '#E879F9',
+    accent: '#C084FC',
+    background: '#140A24',
+    surface: '#1F1236',
+    surfaceLight: '#2A1A48',
+    surfaceElevated: '#35215A',
+    border: 'rgba(196, 181, 253, 0.18)',
+    borderStrong: 'rgba(196, 181, 253, 0.34)',
+    text: '#F5EDFF',
+    textSecondary: '#C4B5E8',
+    textMuted: '#8E7BB0',
+    success: '#4ADE80',
+    warning: '#FBBF24',
+    error: '#F87171',
+    shadow: 'rgba(12, 4, 26, 0.6)',
+    gradient: 'linear-gradient(135deg, #A855F7 0%, #E879F9 100%)'
   },
+
   cyber: {
-    name: '赛博', icon: '⚡',
-    primary: '#00ff88', secondary: '#00ffff',
-    background: '#0a0a0f', surface: '#12121a', surfaceLight: '#1a1a25',
-    border: 'rgba(0,255,136,0.3)', text: '#ffffff', textSecondary: '#88ffcc',
-    textMuted: '#00aa55', accent: '#00ff88', success: '#00ff88', warning: '#ffaa00',
-    error: '#ff4488', shadow: 'rgba(0,255,136,0.3)',
-    gradient: 'linear-gradient(135deg, #00ff88 0%, #00ffff 100%)'
+    name: '赛博',
+    icon: 'zap',
+    mode: DARK,
+    primary: '#00E58A',
+    secondary: '#22D3EE',
+    accent: '#00E58A',
+    background: '#07090C',
+    surface: '#0F1318',
+    surfaceLight: '#171D24',
+    surfaceElevated: '#1E2630',
+    border: 'rgba(0, 229, 138, 0.22)',
+    borderStrong: 'rgba(0, 229, 138, 0.42)',
+    text: '#E9FFF5',
+    textSecondary: '#7FE8BE',
+    textMuted: '#4E9E7C',
+    success: '#00E58A',
+    warning: '#FBBF24',
+    error: '#FB7185',
+    shadow: 'rgba(0, 0, 0, 0.6)',
+    gradient: 'linear-gradient(135deg, #00E58A 0%, #22D3EE 100%)'
   },
+
   autumn: {
-    name: '金秋', icon: '🍂',
-    primary: '#f59e0b', secondary: '#d97706',
-    background: '#1c1917', surface: '#374151', surfaceLight: '#4b5563',
-    border: 'rgba(245,158,11,0.2)', text: '#fef3c7', textSecondary: '#fde68a',
-    textMuted: '#64748b', accent: '#f59e0b', success: '#22c55e', warning: '#fbbf24',
-    error: '#f87171', shadow: 'rgba(245,158,11,0.2)',
-    gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+    name: '金秋',
+    icon: 'sunrise',
+    mode: DARK,
+    primary: '#FBBF24',
+    secondary: '#F59E0B',
+    accent: '#FBBF24',
+    background: '#17130E',
+    surface: '#231C15',
+    surfaceLight: '#2F261C',
+    surfaceElevated: '#3B3024',
+    border: 'rgba(251, 191, 36, 0.18)',
+    borderStrong: 'rgba(251, 191, 36, 0.34)',
+    text: '#FDF6E7',
+    textSecondary: '#D8C39A',
+    textMuted: '#A08B63',
+    success: '#4ADE80',
+    warning: '#F59E0B',
+    error: '#F87171',
+    shadow: 'rgba(18, 12, 4, 0.55)',
+    gradient: 'linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%)'
   }
 }
+
+/** token 名 → CSS 变量名 */
+const CSS_VARS = {
+  primary: '--theme-primary',
+  secondary: '--theme-secondary',
+  accent: '--theme-accent',
+  background: '--theme-background',
+  surface: '--theme-surface',
+  surfaceLight: '--theme-surface-light',
+  surfaceElevated: '--theme-surface-elevated',
+  border: '--theme-border',
+  borderStrong: '--theme-border-strong',
+  text: '--theme-text',
+  textSecondary: '--theme-text-secondary',
+  textMuted: '--theme-text-muted',
+  success: '--theme-success',
+  warning: '--theme-warning',
+  error: '--theme-error',
+  shadow: '--theme-shadow',
+  gradient: '--theme-gradient'
+}
+
+const THEME_KEYS = Object.keys(themes)
+const STORAGE_KEY = 'theme'
 
 const ThemeContext = createContext()
 
 export function ThemeProvider({ children }) {
-  const [themeName, setThemeName] = useState(() => localStorage.getItem('theme') || 'light')
+  const [themeName, setThemeName] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    return THEME_KEYS.includes(saved) ? saved : 'light'
+  })
+
   const theme = themes[themeName] || themes.light
 
   useEffect(() => {
-    localStorage.setItem('theme', themeName)
-    const r = document.documentElement.style
-    r.setProperty('--theme-primary', theme.primary)
-    r.setProperty('--theme-secondary', theme.secondary)
-    r.setProperty('--theme-background', theme.background)
-    r.setProperty('--theme-surface', theme.surface)
-    r.setProperty('--theme-surface-light', theme.surfaceLight)
-    r.setProperty('--theme-border', theme.border)
-    r.setProperty('--theme-text', theme.text)
-    r.setProperty('--theme-text-secondary', theme.textSecondary)
-    r.setProperty('--theme-text-muted', theme.textMuted)
-    r.setProperty('--theme-accent', theme.accent)
-    r.setProperty('--theme-success', theme.success)
-    r.setProperty('--theme-warning', theme.warning)
-    r.setProperty('--theme-error', theme.error)
-    r.setProperty('--theme-shadow', theme.shadow)
-    r.setProperty('--theme-gradient', theme.gradient)
+    localStorage.setItem(STORAGE_KEY, themeName)
+
+    const root = document.documentElement
+    const style = root.style
+    for (const [key, cssVar] of Object.entries(CSS_VARS)) {
+      style.setProperty(cssVar, theme[key])
+    }
+    // 供 CSS 针对明/暗做差异化处理（阴影强度、图片亮度等）
+    root.dataset.themeMode = theme.mode
+
+    // 浏览器 UI（地址栏/滚动条底色）跟随主题
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) meta.setAttribute('content', theme.background)
   }, [themeName, theme])
 
   const setTheme = useCallback((name) => {
@@ -107,7 +258,7 @@ export function ThemeProvider({ children }) {
   }, [])
 
   return (
-    <ThemeContext.Provider value={{ theme, themeName, setTheme, themes }}>
+    <ThemeContext.Provider value={{ theme, themeName, setTheme, themes, themeKeys: THEME_KEYS }}>
       {children}
     </ThemeContext.Provider>
   )

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { timeAgo } from '../utils/format.js'
+import Icon from './Icon.jsx'
 
 // 角色 → 身份标签文案/色阶
 const ROLE_TAG = {
@@ -13,10 +14,10 @@ const ROLE_TAG = {
 
 // 统计卡片配置（图标 + 标题）
 const STAT_CARDS = [
-  { key: 'postCount', label: '帖子总数', icon: '📝' },
-  { key: 'memberCount', label: '会员总数', icon: '👥' },
-  { key: 'todayCount', label: '今日发帖', icon: '✍️' },
-  { key: 'onlineCount', label: '在线人数', icon: '🟢' }
+  { key: 'postCount', label: '帖子总数', icon: 'file-text' },
+  { key: 'memberCount', label: '会员总数', icon: 'users' },
+  { key: 'todayCount', label: '今日发帖', icon: 'edit-3' },
+  { key: 'onlineCount', label: '在线人数', icon: 'activity' }
 ]
 
 export default function ForumAnnounceModal({ open, onClose }) {
@@ -86,7 +87,7 @@ export default function ForumAnnounceModal({ open, onClose }) {
       <div className="fam-modal" onClick={(e) => e.stopPropagation()}>
         {/* 关闭按钮 */}
         <button className="fam-close" onClick={onClose} aria-label="关闭" title="关闭">
-          ✕
+          <Icon name="x" size={16} />
         </button>
 
         {/* 1. 顶部：用户信息 + 签到状态 */}
@@ -110,7 +111,16 @@ export default function ForumAnnounceModal({ open, onClose }) {
             onClick={handleCheckin}
             disabled={checkedToday || checking}
           >
-            {checkedToday ? '✓ 已签到' : checking ? '签到中…' : '签到'}
+            {checkedToday ? (
+              <>
+                <Icon name="check" size={15} />
+                已签到
+              </>
+            ) : checking ? (
+              '签到中…'
+            ) : (
+              '签到'
+            )}
           </button>
         </header>
 
@@ -120,7 +130,9 @@ export default function ForumAnnounceModal({ open, onClose }) {
         <div className="fam-stats">
           {STAT_CARDS.map((c) => (
             <div key={c.key} className="fam-stat">
-              <span className="fam-stat-ic">{c.icon}</span>
+              <span className="fam-stat-ic">
+                <Icon name={c.icon} size={18} />
+              </span>
               <div className="fam-stat-num">{stats ? (stats[c.key] ?? 0) : '—'}</div>
               <div className="fam-stat-label">{c.label}</div>
             </div>
@@ -130,7 +142,10 @@ export default function ForumAnnounceModal({ open, onClose }) {
         {/* 3. 版主 / 管理员列表 */}
         {staff.length > 0 && (
           <section className="fam-section">
-            <h3 className="fam-sec-title">🛡️ 版主 / 管理员</h3>
+            <h3 className="fam-sec-title">
+              <Icon name="shield" size={15} />
+              版主 / 管理员
+            </h3>
             <div className="fam-staff">
               {staff.map((s) => {
                 const tag = ROLE_TAG[s.role] || { label: '成员', cls: '' }
@@ -149,15 +164,24 @@ export default function ForumAnnounceModal({ open, onClose }) {
         {/* 4. 置顶公告列表 */}
         {notices.length > 0 && (
           <section className="fam-section">
-            <h3 className="fam-sec-title">📌 置顶公告</h3>
+            <h3 className="fam-sec-title">
+              <Icon name="map-pin" size={15} />
+              置顶公告
+            </h3>
             <ul className="fam-notices">
               {notices.map((n) => (
                 <li key={n.id} className="fam-notice" onClick={() => { navigate(`/post/${n.id}`); onClose() }}>
                   <div className="fam-notice-title">{n.title}</div>
                   <div className="fam-notice-meta">
                     <span className="fam-notice-board">{n.board?.title || '公告'}</span>
-                    <span>💬 {n.commentCount ?? 0}</span>
-                    <span>⏱ {timeAgo(n.lastReplyAt)}</span>
+                    <span>
+                      <Icon name="message-circle" size={12} />
+                      {n.commentCount ?? 0}
+                    </span>
+                    <span>
+                      <Icon name="clock" size={12} />
+                      {timeAgo(n.lastReplyAt)}
+                    </span>
                     {n.lastReplyBy && <span>最后回复：{n.lastReplyBy}</span>}
                   </div>
                 </li>

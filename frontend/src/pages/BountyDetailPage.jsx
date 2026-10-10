@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import Icon from '../components/Icon.jsx'
 
 function timeAgo(s) {
   if (!s) return ''
@@ -81,37 +82,62 @@ export default function BountyDetailPage() {
 
   return (
     <div>
-      <button className="btn-ghost" onClick={() => navigate('/bounty')} style={{ marginBottom: 12 }}>← 返回大厅</button>
+      <button className="btn-ghost" onClick={() => navigate('/bounty')} style={{ marginBottom: 12 }}>
+        <Icon name="arrow-left" size={15} />
+        返回大厅
+      </button>
 
       <div className="card">
         <div className="post-meta">
           <span className="avatar sm">{b.asker?.avatarChar || '?'}</span>
           <span className="author">{b.asker?.name || '匿名'}</span>
-          <span className="bounty-status open">{STATUS[b.status] || b.status}</span>
-          <span>· {timeAgo(b.createdAt)}</span>
+          <span className={'bounty-status ' + (b.status === 'open' ? 'open' : b.status === 'adopted' ? 'adopted' : 'closed')}>
+            {STATUS[b.status] || b.status}
+          </span>
+          <span className="comment-time">
+            <Icon name="clock" size={12} /> {timeAgo(b.createdAt)}
+          </span>
         </div>
         <h1 className="detail-title" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           {b.title}
-          <span className={'bounty-reward' + (b.status !== 'open' ? ' done' : '')}>💰 {b.rewardPoints}</span>
+          <span className={'bounty-reward' + (b.status !== 'open' ? ' done' : '')}>
+            <Icon name="star" size={13} />
+            {b.rewardPoints}
+          </span>
         </h1>
         <div className="detail-content">{b.content}</div>
         <div className="post-actions" style={{ marginTop: 16 }}>
-          <span className="act">💬 {b.answerCount} 回答</span>
-          <span className="act">👁️ {b.viewCount}</span>
+          <span className="act">
+            <Icon name="message-circle" size={16} />
+            {b.answerCount} 回答
+          </span>
+          <span className="act">
+            <Icon name="eye" size={16} />
+            {b.viewCount}
+          </span>
         </div>
         {isAsker && b.status === 'open' && (
           <div style={{ marginTop: 14 }}>
-            <button className="btn-ghost" onClick={close}>关闭悬赏（退回赏金）</button>
+            <button className="btn-ghost" onClick={close}>
+              <Icon name="x-circle" size={15} />
+              关闭悬赏（退回赏金）
+            </button>
           </div>
         )}
       </div>
 
-      <h3 className="section-title">回答 {b.answers?.length || 0}</h3>
+      <h3 className="section-title">
+        <Icon name="message-square" size={17} />
+        回答 {b.answers?.length || 0}
+      </h3>
 
       {canAnswer && (
         <form className="card" onSubmit={submitAnswer} style={{ padding: 16 }}>
           <textarea className="textarea" style={{ marginBottom: 12 }} placeholder="写下你的解决方案…" value={answer} onChange={(e) => setAnswer(e.target.value)} />
-          <button className="btn-primary" type="submit" disabled={busy}>{busy ? '提交中…' : '提交回答'}</button>
+          <button className="btn-primary" type="submit" disabled={busy}>
+            <Icon name="send" size={15} />
+            {busy ? '提交中…' : '提交回答'}
+          </button>
         </form>
       )}
       {!user && <div className="empty">登录后可参与回答</div>}
@@ -122,12 +148,22 @@ export default function BountyDetailPage() {
           <div className="post-meta">
             <span className="avatar sm">{a.answerer?.avatarChar || '?'}</span>
             <span className="author">{a.answerer?.name || '匿名'}</span>
-            {a.isAdopted && <span className="tag active" style={{ cursor: 'default' }}>✓ 已采纳</span>}
-            <span>· {timeAgo(a.createdAt)}</span>
+            {a.isAdopted && (
+              <span className="tag active" style={{ cursor: 'default' }}>
+                <Icon name="check" size={13} />
+                已采纳
+              </span>
+            )}
+            <span className="comment-time">
+              <Icon name="clock" size={12} /> {timeAgo(a.createdAt)}
+            </span>
           </div>
           <div className="detail-content" style={{ fontSize: 14 }}>{a.content}</div>
           {isAsker && b.status === 'open' && !a.isAdopted && (
-            <button className="btn-primary" style={{ marginTop: 12 }} onClick={() => adopt(a.id)}>采纳此回答</button>
+            <button className="btn-primary" style={{ marginTop: 12 }} onClick={() => adopt(a.id)}>
+              <Icon name="check" size={15} />
+              采纳此回答
+            </button>
           )}
         </div>
       ))}

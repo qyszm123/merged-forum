@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import Icon from '../components/Icon.jsx'
 
 function timeAgo(s) {
   if (!s) return ''
@@ -16,6 +17,12 @@ function timeAgo(s) {
 
 // 常见职业清单，可多选 + 自定义
 const PRESET_ROLES = ['前端', '后端', '全栈', '硬件', '嵌入式', '算法', 'AI/机器学习', '产品', 'UI/设计', '运营', '答辩', '视频剪辑', '文案', '测试']
+
+const FILTERS = [
+  ['open', '招募中', 'activity'],
+  ['closed', '已结束', 'x-circle'],
+  ['all', '全部', 'list']
+]
 
 export default function RecruitHallPage() {
   const navigate = useNavigate()
@@ -96,9 +103,13 @@ export default function RecruitHallPage() {
   return (
     <div>
       <div className="bounty-head">
-        <h2 className="section-title" style={{ margin: 0 }}>📣 招募大厅</h2>
+        <h2 className="section-title" style={{ margin: 0 }}>
+          <Icon name="user-plus" size={18} />
+          招募大厅
+        </h2>
         <button className="btn-primary" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? '收起' : '＋ 发布招募'}
+          <Icon name={showForm ? 'chevron-up' : 'plus'} size={16} />
+          {showForm ? '收起' : '发布招募'}
         </button>
       </div>
       <div className="bounty-sub">组队做项目、打比赛、找队友，就在这里发招募～</div>
@@ -121,7 +132,8 @@ export default function RecruitHallPage() {
                   className={'role-chip' + (picked ? ' active' : '')}
                   onClick={() => (picked ? removeRole(name) : addRole(name))}
                 >
-                  {name}{picked ? ' ✓' : ' ＋'}
+                  <Icon name={picked ? 'check' : 'plus'} size={12} />
+                  {name}
                 </button>
               )
             })}
@@ -134,7 +146,10 @@ export default function RecruitHallPage() {
               onChange={(e) => setCustomRole(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addRole(customRole); setCustomRole('') } }}
             />
-            <button type="button" className="btn-ghost" onClick={() => { addRole(customRole); setCustomRole('') }}>添加</button>
+            <button type="button" className="btn-ghost" onClick={() => { addRole(customRole); setCustomRole('') }}>
+              <Icon name="plus" size={15} />
+              添加
+            </button>
           </div>
 
           {roles.length > 0 && (
@@ -151,7 +166,9 @@ export default function RecruitHallPage() {
                       onChange={(e) => setRoleCount(r.role, e.target.value)}
                     />
                   </label>
-                  <button type="button" className="fi-remove" onClick={() => removeRole(r.role)}>✕</button>
+                  <button type="button" className="fi-remove" onClick={() => removeRole(r.role)} title="移除">
+                    <Icon name="x" size={14} />
+                  </button>
                 </div>
               ))}
               <div className="role-total">合计需要 <b>{totalMembers}</b> 人</div>
@@ -159,13 +176,22 @@ export default function RecruitHallPage() {
           )}
 
           {formErr && <div className="error-text">{formErr}</div>}
-          <button className="btn-primary" type="submit" disabled={busy}>{busy ? '发布中…' : '发布招募'}</button>
+          <button className="btn-primary" type="submit" disabled={busy}>
+            <Icon name="send" size={15} />
+            {busy ? '发布中…' : '发布招募'}
+          </button>
         </form>
       )}
 
       <div className="sort-bar" style={{ marginTop: 16 }}>
-        {[['open', '招募中'], ['closed', '已结束'], ['all', '全部']].map(([k, l]) => (
-          <button key={k} className={'tag' + (status === k ? ' active' : '')} style={{ cursor: 'pointer' }} onClick={() => setStatus(k)}>
+        {FILTERS.map(([k, l, ic]) => (
+          <button
+            key={k}
+            className={'tag' + (status === k ? ' active' : '')}
+            style={{ cursor: 'pointer' }}
+            onClick={() => setStatus(k)}
+          >
+            <Icon name={ic} size={13} />
             {l}
           </button>
         ))}
@@ -180,7 +206,8 @@ export default function RecruitHallPage() {
           <div className="bounty-card-top">
             <h3 className="post-title" style={{ margin: 0 }}>{r.title}</h3>
             <span className={'recruit-count' + (r.status !== 'open' ? ' done' : '')}>
-              👥 {r.acceptedCount}/{r.memberCount}
+              <Icon name="users" size={13} />
+              {r.acceptedCount}/{r.memberCount}
             </span>
           </div>
           <div className="post-meta">
@@ -190,8 +217,12 @@ export default function RecruitHallPage() {
             <span className={'bounty-status ' + (r.status === 'open' ? 'open' : 'closed')}>
               {r.status === 'open' ? '招募中' : '已结束'}
             </span>
-            <span>· {r.appCount} 报名</span>
-            <span>· {timeAgo(r.createdAt)}</span>
+            <span className="comment-time">
+              <Icon name="user-plus" size={12} /> {r.appCount} 报名
+            </span>
+            <span className="comment-time">
+              <Icon name="clock" size={12} /> {timeAgo(r.createdAt)}
+            </span>
           </div>
         </div>
       ))}

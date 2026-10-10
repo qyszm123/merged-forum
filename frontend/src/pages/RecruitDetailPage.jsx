@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import Icon from '../components/Icon.jsx'
 
 function timeAgo(s) {
   if (!s) return ''
@@ -70,7 +71,10 @@ export default function RecruitDetailPage() {
 
   return (
     <div>
-      <button className="btn-ghost" onClick={() => navigate('/recruit')} style={{ marginBottom: 12 }}>← 返回大厅</button>
+      <button className="btn-ghost" onClick={() => navigate('/recruit')} style={{ marginBottom: 12 }}>
+        <Icon name="arrow-left" size={15} />
+        返回大厅
+      </button>
 
       <div className="card">
         <div className="post-meta">
@@ -83,7 +87,10 @@ export default function RecruitDetailPage() {
         </div>
         <h1 className="detail-title" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           {r.title}
-          <span className={'recruit-count' + (r.status !== 'open' ? ' done' : '')}>👥 {r.acceptedCount}/{r.memberCount}</span>
+          <span className={'recruit-count' + (r.status !== 'open' ? ' done' : '')}>
+            <Icon name="users" size={13} />
+            {r.acceptedCount}/{r.memberCount}
+          </span>
         </h1>
         {r.roleWanted && (
           <div style={{ marginBottom: 10 }}>
@@ -102,12 +109,21 @@ export default function RecruitDetailPage() {
         )}
         <div className="detail-content">{r.content}</div>
         <div className="post-actions" style={{ marginTop: 16 }}>
-          <span className="act">🙋 {r.appCount} 报名</span>
-          <span className="act">👁️ {r.viewCount}</span>
+          <span className="act">
+            <Icon name="user-plus" size={16} />
+            {r.appCount} 报名
+          </span>
+          <span className="act">
+            <Icon name="eye" size={16} />
+            {r.viewCount}
+          </span>
         </div>
         {r.isPublisher && r.status === 'open' && (
           <div style={{ marginTop: 14 }}>
-            <button className="btn-ghost" onClick={() => act('close', null, '确认关闭招募？')}>关闭招募</button>
+            <button className="btn-ghost" onClick={() => act('close', null, '确认关闭招募？')}>
+              <Icon name="x-circle" size={15} />
+              关闭招募
+            </button>
           </div>
         )}
       </div>
@@ -116,7 +132,10 @@ export default function RecruitDetailPage() {
         <form className="card" onSubmit={apply} style={{ padding: 16 }}>
           <div className="field-label">报名（附自我介绍，让对方了解你）</div>
           <textarea className="textarea" style={{ marginBottom: 12 }} placeholder="介绍你的技能、经历，以及为什么想加入…" value={intro} onChange={(e) => setIntro(e.target.value)} />
-          <button className="btn-primary" type="submit" disabled={busy}>{busy ? '提交中…' : '提交报名'}</button>
+          <button className="btn-primary" type="submit" disabled={busy}>
+            <Icon name="send" size={15} />
+            {busy ? '提交中…' : '提交报名'}
+          </button>
         </form>
       )}
       {!user && <div className="empty">登录后可报名</div>}
@@ -132,7 +151,10 @@ export default function RecruitDetailPage() {
 
       {r.isPublisher && (
         <>
-          <h3 className="section-title">报名列表 {r.applications?.length || 0}</h3>
+          <h3 className="section-title">
+            <Icon name="users" size={17} />
+            报名列表 {r.applications?.length || 0}
+          </h3>
           {(!r.applications || r.applications.length === 0) && <div className="empty">还没有人报名</div>}
           {r.applications?.map((a) => (
             <div className="card" key={a.id}>
@@ -142,13 +164,21 @@ export default function RecruitDetailPage() {
                 <span className={'bounty-status ' + (a.status === 'accepted' ? 'adopted' : a.status === 'rejected' ? 'closed' : 'open')}>
                   {APP_STATUS[a.status] || a.status}
                 </span>
-                <span>· {timeAgo(a.createdAt)}</span>
+                <span className="comment-time">
+                  <Icon name="clock" size={12} /> {timeAgo(a.createdAt)}
+                </span>
               </div>
               <div className="detail-content" style={{ fontSize: 14 }}>{a.intro}</div>
               {r.status === 'open' && a.status === 'pending' && (
                 <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-                  <button className="btn-primary" onClick={() => act('accept', a.id, `确认录取 ${a.applicant?.name}？`)}>录取</button>
-                  <button className="btn-ghost" onClick={() => act('reject', a.id, `确认拒绝 ${a.applicant?.name}？`)}>拒绝</button>
+                  <button className="btn-primary" onClick={() => act('accept', a.id, `确认录取 ${a.applicant?.name}？`)}>
+                    <Icon name="check" size={15} />
+                    录取
+                  </button>
+                  <button className="btn-ghost" onClick={() => act('reject', a.id, `确认拒绝 ${a.applicant?.name}？`)}>
+                    <Icon name="x" size={15} />
+                    拒绝
+                  </button>
                 </div>
               )}
             </div>

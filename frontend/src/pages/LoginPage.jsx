@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import Icon from '../components/Icon.jsx'
+
+const DEMO_ACCOUNTS = ['2026001', '2026002', '2026003', 'teacher', 'admin']
 
 export default function LoginPage() {
   const { login, register } = useAuth()
@@ -42,16 +45,23 @@ export default function LoginPage() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
+        <div className="auth-logo">
+          <Icon name="compass" size={22} />
+        </div>
         <h1>奇遇广场</h1>
-        <p className="sub">校园科创社区</p>
+        <p className="sub">校园科创社区 · 灵感 / 协作 / 成长</p>
+
         <div className="auth-tabs">
           <button className={tab === 'login' ? 'active' : ''} onClick={() => setTab('login')}>
+            <Icon name="log-in" size={15} />
             登录
           </button>
           <button className={tab === 'register' ? 'active' : ''} onClick={() => setTab('register')}>
+            <Icon name="user-plus" size={15} />
             注册
           </button>
         </div>
+
         <form onSubmit={submit}>
           <label className="field-label">学号 / 账号</label>
           <input
@@ -70,7 +80,9 @@ export default function LoginPage() {
           />
           {tab === 'register' && (
             <>
-              <label className="field-label">邀请码 <span style={{color: 'var(--theme-error)'}}>*</span></label>
+              <label className="field-label">
+                邀请码 <span style={{ color: 'var(--theme-error)' }}>*</span>
+              </label>
               <input
                 className="input"
                 placeholder="请输入管理员发放的邀请码"
@@ -85,21 +97,24 @@ export default function LoginPage() {
           )}
           {err && <div className="error-text">{err}</div>}
           <button className="btn-primary" style={{ width: '100%' }} disabled={busy}>
+            <Icon name={tab === 'login' ? 'log-in' : 'user-plus'} size={15} />
             {busy ? '处理中…' : tab === 'login' ? '登录' : '注册并进入'}
           </button>
         </form>
+
         {tab === 'login' && (
           <div className="hint">
-            演示账号（密码均为 123456）：<br />
-            <span style={{ cursor: 'pointer', color: 'var(--theme-accent)' }} onClick={() => fillDemo('2026001')}>2026001</span>
-            {' · '}
-            <span style={{ cursor: 'pointer', color: 'var(--theme-accent)' }} onClick={() => fillDemo('2026002')}>2026002</span>
-            {' · '}
-            <span style={{ cursor: 'pointer', color: 'var(--theme-accent)' }} onClick={() => fillDemo('2026003')}>2026003</span>
-            {' · '}
-            <span style={{ cursor: 'pointer', color: 'var(--theme-accent)' }} onClick={() => fillDemo('teacher')}>teacher</span>
-            {' · '}
-            <span style={{ cursor: 'pointer', color: 'var(--theme-accent)' }} onClick={() => fillDemo('admin')}>admin</span>
+            <div className="hint-title">
+              <Icon name="key" size={13} />
+              演示账号（密码均为 123456，点选自动填入）
+            </div>
+            <div className="hint-chips">
+              {DEMO_ACCOUNTS.map((no) => (
+                <button key={no} type="button" className="tag" onClick={() => fillDemo(no)}>
+                  {no}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>

@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import api from '../api.js'
+import Icon from './Icon.jsx'
 import { isOnline } from '../utils/format.js'
 
 const MODULES = [
-  { name: 'projects', label: '项目广场', icon: '🚀', desc: '科创项目招募与展示' },
-  { name: 'ideas', label: '点子集市', icon: '💡', desc: '积分委托与创意交付' },
-  { name: 'points', label: '积分中心', icon: '⭐', desc: '校园积分沙箱与流水' },
-  { name: 'train', label: '修炼之路', icon: '🎓', desc: '闯关刷题与判定' },
-  { name: 'makers', label: '人才广场', icon: '👥', desc: '创造者人才墙' },
-  { name: 'events', label: '活动报名', icon: '📅', desc: '黑客松与特殊通道' }
+  { name: 'projects', label: '项目广场', icon: 'layers', desc: '科创项目招募与展示' },
+  { name: 'ideas', label: '点子集市', icon: 'zap', desc: '积分委托与创意交付' },
+  { name: 'points', label: '积分中心', icon: 'star', desc: '校园积分沙箱与流水' },
+  { name: 'train', label: '修炼之路', icon: 'target', desc: '闯关刷题与判定' },
+  { name: 'makers', label: '人才广场', icon: 'users', desc: '创造者人才墙' },
+  { name: 'events', label: '活动报名', icon: 'calendar', desc: '黑客松与特殊通道' }
 ]
 
 // 标签云字号（按热度错落，破坏对称）
@@ -23,7 +24,10 @@ function HomeSidebar({ boards, makers, notices, onBoard }) {
         <div className="panel hp-panel">
           <div className="panel-head">
             <h3>热门话题</h3>
-            <button className="panel-more" onClick={() => onBoard('all')}>全部</button>
+            <button className="panel-more" onClick={() => onBoard('all')}>
+              全部
+              <Icon name="chevron-right" size={13} />
+            </button>
           </div>
           <div className="tag-cloud">
             {boards.slice(0, 8).map((b, i) => (
@@ -43,13 +47,16 @@ function HomeSidebar({ boards, makers, notices, onBoard }) {
         <div className="panel hp-panel">
           <div className="panel-head">
             <h3>活跃创造者</h3>
-            <button className="panel-more" onClick={() => navigate('/m/makers')}>更多</button>
+            <button className="panel-more" onClick={() => navigate('/m/makers')}>
+              更多
+              <Icon name="chevron-right" size={13} />
+            </button>
           </div>
           <div className="active-users">
             {makers.slice(0, 5).map((m) => {
               const online = isOnline(m.id)
               return (
-                <div key={m.id} className="active-user" onClick={() => navigate(`/m/makers`)}>
+                <div key={m.id} className="active-user" onClick={() => navigate('/m/makers')}>
                   <span
                     className={'avatar sm' + (online ? ' is-online' : ' is-offline')}
                     title={online ? `${m.displayName} · 在线` : `${m.displayName} · 离线`}
@@ -73,7 +80,9 @@ function HomeSidebar({ boards, makers, notices, onBoard }) {
           <ul className="notice-list">
             {notices.slice(0, 4).map((n) => (
               <li key={n.id} onClick={() => navigate(`/post/${n.id}`)}>
-                <span className="notice-dot">📌</span>
+                <span className="notice-dot">
+                  <Icon name="map-pin" size={13} />
+                </span>
                 <span className="notice-text">{n.title}</span>
               </li>
             ))}
@@ -119,33 +128,42 @@ export default function RightSidebar({ onBoard }) {
   return (
     <aside className="right-sidebar">
       <div className="panel">
-        <h3>板块</h3>
-        <span className="tag" onClick={() => onBoard('all')}>全部</span>
-        {boards.map((b) => (
-          <span key={b.slug} className="tag" onClick={() => onBoard(b.slug)}>
-            {b.title}
+        <div className="panel-head">
+          <h3>板块</h3>
+        </div>
+        <div className="tag-cloud">
+          <span className="tag" onClick={() => onBoard('all')}>
+            全部
           </span>
-        ))}
+          {boards.map((b) => (
+            <span key={b.slug} className="tag" onClick={() => onBoard(b.slug)}>
+              {b.title}
+            </span>
+          ))}
+        </div>
       </div>
 
       <div className="panel">
+        <div className="panel-head">
+          <h3>探索</h3>
+        </div>
         <div className="mod-link" onClick={() => navigate('/careers')}>
-          <span style={{ fontSize: 18 }}>🎓</span>
-          <div>
+          <span className="mod-ic">
+            <Icon name="book-open" size={16} />
+          </span>
+          <div className="mod-body">
             <div>职业学习</div>
-            <div style={{ fontSize: 12, color: 'var(--theme-text-muted)', fontWeight: 400 }}>
-              学习路径、技能点与结业考试
-            </div>
+            <div className="mod-sub">学习路径、技能点与结业考试</div>
           </div>
         </div>
         {MODULES.map((m) => (
           <div key={m.name} className="mod-link" onClick={() => navigate(`/m/${m.name}`)}>
-            <span style={{ fontSize: 18 }}>{m.icon}</span>
-            <div>
+            <span className="mod-ic">
+              <Icon name={m.icon} size={16} />
+            </span>
+            <div className="mod-body">
               <div>{m.label}</div>
-              <div style={{ fontSize: 12, color: 'var(--theme-text-muted)', fontWeight: 400 }}>
-                {m.desc}
-              </div>
+              <div className="mod-sub">{m.desc}</div>
             </div>
           </div>
         ))}

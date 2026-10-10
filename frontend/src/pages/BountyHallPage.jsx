@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import Icon from '../components/Icon.jsx'
 
 function timeAgo(s) {
   if (!s) return ''
@@ -15,10 +16,17 @@ function timeAgo(s) {
 }
 
 const STATUS = {
-  open: { l: '进行中', cls: 'open' },
-  adopted: { l: '已采纳', cls: 'adopted' },
-  closed: { l: '已关闭', cls: 'closed' }
+  open: { l: '进行中', cls: 'open', icon: 'activity' },
+  adopted: { l: '已采纳', cls: 'adopted', icon: 'check-circle' },
+  closed: { l: '已关闭', cls: 'closed', icon: 'x-circle' }
 }
+
+const FILTERS = [
+  ['open', '进行中', 'activity'],
+  ['adopted', '已采纳', 'check-circle'],
+  ['closed', '已关闭', 'x-circle'],
+  ['all', '全部', 'list']
+]
 
 export default function BountyHallPage() {
   const navigate = useNavigate()
@@ -82,9 +90,13 @@ export default function BountyHallPage() {
   return (
     <div>
       <div className="bounty-head">
-        <h2 className="section-title" style={{ margin: 0 }}>💰 悬赏大厅</h2>
+        <h2 className="section-title" style={{ margin: 0 }}>
+          <Icon name="gift" size={18} />
+          悬赏大厅
+        </h2>
         <button className="btn-primary" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? '收起' : '＋ 发布悬赏'}
+          <Icon name={showForm ? 'chevron-up' : 'plus'} size={16} />
+          {showForm ? '收起' : '发布悬赏'}
         </button>
       </div>
       <div className="bounty-sub">用积分悬赏，让社群帮你解决难题。我的积分：<b>{myPoints}</b></div>
@@ -98,13 +110,22 @@ export default function BountyHallPage() {
           <label className="field-label">赏金积分（发布后从账户冻结，采纳后转给回答者）</label>
           <input className="input" type="number" min="1" max={myPoints} value={reward} onChange={(e) => setReward(e.target.value)} />
           {formErr && <div className="error-text">{formErr}</div>}
-          <button className="btn-primary" type="submit" disabled={busy}>{busy ? '发布中…' : '发布悬赏'}</button>
+          <button className="btn-primary" type="submit" disabled={busy}>
+            <Icon name="send" size={15} />
+            {busy ? '发布中…' : '发布悬赏'}
+          </button>
         </form>
       )}
 
       <div className="sort-bar" style={{ marginTop: 16 }}>
-        {[['open', '进行中'], ['adopted', '已采纳'], ['closed', '已关闭'], ['all', '全部']].map(([k, l]) => (
-          <button key={k} className={'tag' + (status === k ? ' active' : '')} style={{ cursor: 'pointer' }} onClick={() => setStatus(k)}>
+        {FILTERS.map(([k, l, ic]) => (
+          <button
+            key={k}
+            className={'tag' + (status === k ? ' active' : '')}
+            style={{ cursor: 'pointer' }}
+            onClick={() => setStatus(k)}
+          >
+            <Icon name={ic} size={13} />
             {l}
           </button>
         ))}
@@ -118,14 +139,23 @@ export default function BountyHallPage() {
         <div className="card bounty-card" key={b.id} onClick={() => navigate(`/bounty/${b.id}`)}>
           <div className="bounty-card-top">
             <h3 className="post-title" style={{ margin: 0 }}>{b.title}</h3>
-            <span className={'bounty-reward' + (b.status !== 'open' ? ' done' : '')}>💰 {b.rewardPoints}</span>
+            <span className={'bounty-reward' + (b.status !== 'open' ? ' done' : '')}>
+              <Icon name="star" size={13} />
+              {b.rewardPoints}
+            </span>
           </div>
           <div className="post-meta">
             <span className="avatar sm">{b.asker?.avatarChar || '?'}</span>
             <span className="author">{b.asker?.name || '匿名'}</span>
-            <span className={'bounty-status ' + (STATUS[b.status]?.cls || '')}>{STATUS[b.status]?.l || b.status}</span>
-            <span>· {b.answerCount} 回答</span>
-            <span>· {timeAgo(b.createdAt)}</span>
+            <span className={'bounty-status ' + (STATUS[b.status]?.cls || '')}>
+              {STATUS[b.status]?.l || b.status}
+            </span>
+            <span className="comment-time">
+              <Icon name="message-circle" size={12} /> {b.answerCount} 回答
+            </span>
+            <span className="comment-time">
+              <Icon name="clock" size={12} /> {timeAgo(b.createdAt)}
+            </span>
           </div>
         </div>
       ))}
