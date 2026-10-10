@@ -1,20 +1,21 @@
 /**
  * 在 git push 不可用时，用 GitHub API 把本地 main 的最新提交内容推上去。
  *
- * 背景：这台机器到 github.com:443 的连接不稳定/不通，但 api.github.com 稳定。
- * 做法：读取本地 HEAD 与远端 main 的差异 → 为每个变更文件建 blob →
+ * 背景：这台机器到 github.com:443 的连接不稳定甚至不通，但 api.github.com 稳定。
+ * 做法：比出本地 HEAD 与远端 main 的差异 → 为每个变更文件建 blob →
  *       带 base_tree 建 tree → 建 commit → 更新 main ref。
  *
  * 用法：
  *   $env:GH_TOKEN = (gh auth token)
- *   node frontend/.iconsrc/push-main.mjs           # 实际推送
- *   node frontend/.iconsrc/push-main.mjs --dry-run # 只看会推哪些文件
+ *   node frontend/.iconsrc/push-main.mjs                 # 实际推送
+ *   node frontend/.iconsrc/push-main.mjs --dry-run       # 只看会推哪些文件
+ *   node frontend/.iconsrc/push-main.mjs --base <ref>    # 显式指定比较基准
  *
  * 注意：API 推上去的 commit 与本地 HEAD 内容相同但 SHA 不同。
  *       网络恢复后用 `git fetch origin && git reset --hard origin/main` 对齐即可（内容不会丢）。
  */
 import { execFileSync } from 'node:child_process'
-import { readFileSync, existsSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
 const TOKEN = process.env.GH_TOKEN
@@ -27,7 +28,7 @@ const REPO = process.env.REPO || 'qyszm123/merged-forum'
 const BRANCH = process.env.BRANCH || 'main'
 const DRY = process.argv.includes('--dry-run')
 // --base <ref>：显式指定比较基准。API 推上去的提交本地没有，
-// 若又找不到 tree 相同的本地提交（例如某文件换行符不一致），就用它兜底。
+// 若又找不到 tree 相同的本地提交，就用它兜底。
 const baseArgIdx = process.argv.indexOf('--base')
 const BASE_ARG = baseArgIdx > -1 ? process.argv[baseArgIdx + 1] : null
 const ROOT = new URL('../../', import.meta.url).pathname.replace(/^\//, '')
@@ -36,15 +37,14 @@ const API = 'https://api.github.com'
 const git = (...args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim()
 
 /**
- * git 在 Windows 上按 autocrlf 存 LF，而工作区文件可能是 CRLF
- * （PowerShell 的 Add-Content/Set-Content 默认写 CRLF）。
- * 直接上传工作区文件会导致 blob 与 git 对象不一致，所以这里统一归一成 LF。
- * 二进制文件原样上传。
+ * 取文件在 git 里真正存储的字节（HEAD 中的 blob），而不是工作区文件。
+ *
+ * 为什么不直接读工作区：Windows 上 core.autocrlf 会让工作区是 CRLF 而 git 存 LF，
+ * 工作区文件也可能被编辑器 / PowerShell 改成别的编码。用 git blob 可以保证
+ * 上传的内容与本地提交逐字节一致，推送后远端 tree 哈希与本地完全相等。
  */
-function normalizeContent(buf) {
-  const probe = buf.subarray(0, 8000)
-  if (probe.includes(0)) return buf // 含 NUL，按二进制处理
-  return Buffer.from(buf.toString('utf8').replace(/\r\n/g, '\n'), 'utf8')
+function blobBytes(head, path) {
+  return execFileSync('git', ['cat-file', 'blob', `${head}:${path}`], { cwd: ROOT })
 }
 
 async function api(path, init = {}) {
@@ -137,7 +137,6 @@ try {
     })
     if (!base) {
       console.error(`❌ 本地既没有远端提交 ${remoteSha.slice(0, 8)}，也没有 tree 完全一致的提交。`)
-      console.error('   常见原因：某文件工作区换行符与 git 对象不一致。')
       console.error('   可显式指定基准：node push-main.mjs --base <本地提交>')
       process.exit(1)
     }
@@ -181,15 +180,14 @@ for (const c of changes) {
     tree.push({ path: c.path, mode: '100644', type: 'blob', sha: null }) // 删除
     continue
   }
-  const abs = join(ROOT, c.path)
-  if (!existsSync(abs)) {
+  if (!existsSync(join(ROOT, c.path))) {
     console.error(`❌ 本地找不到 ${c.path}`)
     process.exit(1)
   }
   const blob = await api(`/repos/${REPO}/git/blobs`, {
     method: 'POST',
     body: JSON.stringify({
-      content: normalizeContent(readFileSync(abs)).toString('base64'),
+      content: blobBytes(head, c.path).toString('base64'),
       encoding: 'base64'
     })
   })
@@ -201,7 +199,7 @@ for (const c of changes) {
 }
 console.log(`\n已上传 ${tree.length} 个 blob`)
 
-/* ---- 5. tree / commit / ref ---- */
+/* ---- 6. tree / commit / ref ---- */
 const treeRes = await api(`/repos/${REPO}/git/trees`, {
   method: 'POST',
   body: JSON.stringify({ base_tree: baseTree, tree })
@@ -229,6 +227,14 @@ if (!upd.ok) {
   process.exit(1)
 }
 
+const [owner, name] = REPO.split('/')
 console.log(`\n🎉 已推送到 ${BRANCH}：${newCommit.body.sha.slice(0, 8)}`)
-console.log(`   网络恢复后用以下命令对齐本地（内容一致，不会丢改动）：`)
+console.log(`   远端 tree: ${treeRes.body.sha}`)
+console.log(`   本地 tree: ${git('rev-parse', 'HEAD^{tree}')}`)
+console.log(
+  treeRes.body.sha === git('rev-parse', 'HEAD^{tree}')
+    ? '   ✅ tree 哈希一致，远端内容与本地逐字节相同'
+    : '   ⚠ tree 哈希不同（远端历史与本地历史结构有差异）'
+)
+console.log(`\n   网络恢复后可对齐本地（内容一致，不会丢改动）：`)
 console.log(`   git fetch origin && git reset --hard origin/${BRANCH}`)
