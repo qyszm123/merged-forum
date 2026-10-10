@@ -17,6 +17,7 @@
 | `smoke-app.mjs` | 全链路冒烟：登录并调用各页面依赖的接口。可传入任意基地址（本地代理 / 隧道 / 公网后端） |
 | `verify-site.mjs` | 部署后检查：验证 GitHub Pages 上的首页、资源、SPA 深链回退与后端连通性 |
 | `deploy-pages.mjs` | 把 `dist/` 发布到 GitHub Pages |
+| `push-main.mjs` | 在 `git push` 不通时，用 GitHub API 把本地 main 推上去 |
 
 ## 用法
 
@@ -54,6 +55,18 @@ npm run deploy:pages
 > blob → tree → commit → ref，整次发布是一个原子提交，也不需要 `workflow` 权限。
 >
 > **注意**：`VITE_API_BASE` 是构建时写死的。后端换了地址就要重新构建并重新发布。
+
+## 源码推送（`git push` 不通时）
+
+```bash
+node .iconsrc/push-main.mjs --dry-run   # 先看会推哪些文件
+$env:GH_TOKEN = (gh auth token)
+node .iconsrc/push-main.mjs             # 实际推送
+```
+
+API 推上去的 commit 与本地 HEAD 内容相同但 SHA 不同。网络恢复后执行
+`git fetch origin && git reset --hard origin/main` 对齐即可（内容一致，不会丢改动）。
+
 
 
 ## 新增图标

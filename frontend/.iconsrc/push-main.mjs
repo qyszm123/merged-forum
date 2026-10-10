@@ -26,10 +26,26 @@ if (!TOKEN) {
 const REPO = process.env.REPO || 'qyszm123/merged-forum'
 const BRANCH = process.env.BRANCH || 'main'
 const DRY = process.argv.includes('--dry-run')
+// --base <ref>：显式指定比较基准。API 推上去的提交本地没有，
+// 若又找不到 tree 相同的本地提交（例如某文件换行符不一致），就用它兜底。
+const baseArgIdx = process.argv.indexOf('--base')
+const BASE_ARG = baseArgIdx > -1 ? process.argv[baseArgIdx + 1] : null
 const ROOT = new URL('../../', import.meta.url).pathname.replace(/^\//, '')
 const API = 'https://api.github.com'
 
 const git = (...args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim()
+
+/**
+ * git 在 Windows 上按 autocrlf 存 LF，而工作区文件可能是 CRLF
+ * （PowerShell 的 Add-Content/Set-Content 默认写 CRLF）。
+ * 直接上传工作区文件会导致 blob 与 git 对象不一致，所以这里统一归一成 LF。
+ * 二进制文件原样上传。
+ */
+function normalizeContent(buf) {
+  const probe = buf.subarray(0, 8000)
+  if (probe.includes(0)) return buf // 含 NUL，按二进制处理
+  return Buffer.from(buf.toString('utf8').replace(/\r\n/g, '\n'), 'utf8')
+}
 
 async function api(path, init = {}) {
   const MAX = 4
@@ -92,13 +108,49 @@ if (remoteSha === head) {
   process.exit(0)
 }
 
-/* ---- 3. 差异 ---- */
+/* ---- 3. 远端 commit 对象 + 选定比较基准 ---- */
+const commitRes = await api(`/repos/${REPO}/git/commits/${remoteSha}`)
+if (!commitRes.ok) {
+  console.error(`❌ 读取远端提交 ${remoteSha.slice(0, 8)} 失败: ${commitRes.body?.message}`)
+  process.exit(1)
+}
+const baseTree = commitRes.body.tree.sha
+
+// API 推上去的提交在本地并不存在，git diff 会失败。
+// 优先找一个 tree 与远端完全一致的本地提交；找不到则用 --base 指定的基准。
+let base = remoteSha
+try {
+  git('cat-file', '-e', remoteSha)
+} catch {
+  if (BASE_ARG) {
+    git('cat-file', '-e', BASE_ARG) // 不存在会抛错
+    base = BASE_ARG
+    console.log(`ℹ 本地缺少远端提交对象，按 --base ${BASE_ARG} 作为比较基准\n`)
+  } else {
+    const candidates = git('log', '--pretty=%H', '-100').split('\n').filter(Boolean)
+    base = candidates.find((sha) => {
+      try {
+        return git('rev-parse', `${sha}^{tree}`) === baseTree
+      } catch {
+        return false
+      }
+    })
+    if (!base) {
+      console.error(`❌ 本地既没有远端提交 ${remoteSha.slice(0, 8)}，也没有 tree 完全一致的提交。`)
+      console.error('   常见原因：某文件工作区换行符与 git 对象不一致。')
+      console.error('   可显式指定基准：node push-main.mjs --base <本地提交>')
+      process.exit(1)
+    }
+    console.log(`ℹ 本地缺少远端提交对象，改用 tree 相同的 ${base.slice(0, 8)} 作为比较基准\n`)
+  }
+}
+
+/* ---- 4. 差异 ---- */
 let diff
 try {
-  diff = git('diff', '--name-status', remoteSha, head)
+  diff = git('diff', '--name-status', base, head)
 } catch {
-  console.error(`❌ 本地没有远端提交 ${remoteSha.slice(0, 8)} 的对象，无法比较差异。`)
-  console.error('   请先在有网环境执行 git fetch 后再试。')
+  console.error(`❌ 比较 ${base.slice(0, 8)}..${head.slice(0, 8)} 失败`)
   process.exit(1)
 }
 
@@ -122,10 +174,7 @@ if (DRY) {
   process.exit(0)
 }
 
-/* ---- 4. 建 blob ---- */
-const commitRes = await api(`/repos/${REPO}/git/commits/${remoteSha}`)
-const baseTree = commitRes.body.tree.sha
-
+/* ---- 5. 建 blob ---- */
 const tree = []
 for (const c of changes) {
   if (c.status === 'D') {
@@ -139,7 +188,10 @@ for (const c of changes) {
   }
   const blob = await api(`/repos/${REPO}/git/blobs`, {
     method: 'POST',
-    body: JSON.stringify({ content: readFileSync(abs).toString('base64'), encoding: 'base64' })
+    body: JSON.stringify({
+      content: normalizeContent(readFileSync(abs)).toString('base64'),
+      encoding: 'base64'
+    })
   })
   if (!blob.ok) {
     console.error(`❌ 上传 ${c.path} 失败: ${blob.body?.message}`)
