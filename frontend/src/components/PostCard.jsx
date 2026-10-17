@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { timeAgo, isOnline, stripMarkdown } from '../utils/format.js'
 import { emojiIconName } from '../utils/icons.js'
 import Icon from './Icon.jsx'
+import LikeBurst from './LikeBurst.jsx'
 import ReportButton from './ReportButton.jsx'
 
 export default function PostCard({ post }) {
@@ -94,14 +95,7 @@ export default function PostCard({ post }) {
         </div>
         <div className="post-card-meta">
           <span className="time">{timeAgo(post.createdAt)}</span>
-          <span
-            className={'act' + (liked ? ' is-liked' : '')}
-            onClick={toggleLike}
-            title="点赞"
-          >
-            <Icon name="thumbs-up" size={15} strokeWidth={liked ? 2.4 : 2} />
-            {likeCount}
-          </span>
+          <LikeBurst liked={liked} count={likeCount} onToggle={toggleLike} size={15} />
           <span
             className={'act' + (bookmarked ? ' bookmarked' : '')}
             onClick={toggleBookmark}

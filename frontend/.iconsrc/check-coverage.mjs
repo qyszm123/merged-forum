@@ -31,7 +31,11 @@ for (const file of walk(SRC)) {
     ;(m[1] ?? m[2] ?? '').split(/\s+/).filter(Boolean).forEach((c) => add(c, rel))
   }
   for (const m of text.matchAll(/className=\{([^}]*)\}/g)) {
-    for (const s of m[1].matchAll(/'([^']*)'/g)) {
+    // 先剔除三元里的比较条件（state === 'loading'），那些字符串不是类名
+    const expr = m[1]
+      .replace(/'[^']*'\s*[=!]==?/g, '')
+      .replace(/[=!]==?\s*'[^']*'/g, '')
+    for (const s of expr.matchAll(/'([^']*)'/g)) {
       s[1].split(/\s+/).filter(Boolean).forEach((c) => add(c, rel))
     }
   }

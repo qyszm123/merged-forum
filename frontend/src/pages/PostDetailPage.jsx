@@ -4,6 +4,8 @@ import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { emojiIconName } from '../utils/icons.js'
 import Icon from '../components/Icon.jsx'
+import LikeBurst from '../components/LikeBurst.jsx'
+import MorphButton from '../components/MorphButton.jsx'
 
 function timeAgo(s) {
   if (!s) return ''
@@ -72,6 +74,7 @@ export default function PostDetailPage() {
   const [likeCount, setLikeCount] = useState(0)
   const [bookmarked, setBookmarked] = useState(false)
   const [bookmarkCount, setBookmarkCount] = useState(0)
+  const [sendState, setSendState] = useState('idle')
 
   // 举报相关：target 为 null | 'post' | { commentId }
   const [reportTarget, setReportTarget] = useState(null)
@@ -110,13 +113,17 @@ export default function PostDetailPage() {
   const submitComment = async (e) => {
     e.preventDefault()
     if (!user) return navigate('/login')
-    if (!comment.trim()) return
+    if (!comment.trim() || sendState !== 'idle') return
+    setSendState('loading')
     try {
       await api.post(`/api/forum/posts/${id}/comments`, { content: comment.trim() })
       setComment('')
       load()
+      setSendState('success')
+      setTimeout(() => setSendState('idle'), 900)
     } catch (error) {
       alert(error.message)
+      setSendState('idle')
     }
   }
 
@@ -198,10 +205,7 @@ export default function PostDetailPage() {
           </div>
         )}
         <div className="post-actions" style={{ marginTop: 16 }}>
-          <span className={'act' + (liked ? ' liked' : '')} onClick={toggleLike} title="点赞">
-            <Icon name="thumbs-up" size={16} strokeWidth={liked ? 2.4 : 2} />
-            {likeCount}
-          </span>
+          <LikeBurst liked={liked} count={likeCount} onToggle={toggleLike} size={16} />
           <span className={'act' + (bookmarked ? ' bookmarked' : '')} onClick={toggleBookmark} title="收藏">
             <Icon name="bookmark" size={16} strokeWidth={bookmarked ? 2.4 : 2} />
             {bookmarkCount}
@@ -250,10 +254,9 @@ export default function PostDetailPage() {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
           />
-          <button className="btn-primary" type="submit">
-            <Icon name="send" size={15} />
+          <MorphButton state={sendState} icon="send">
             发送
-          </button>
+          </MorphButton>
         </form>
       ) : (
         <div className="empty">登录后可参与评论</div>

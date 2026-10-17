@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { describeBadgeCondition } from '../utils/format.js'
 import { emojiIconName } from '../utils/icons.js'
 import Icon from '../components/Icon.jsx'
+import JellyToggle from '../components/JellyToggle.jsx'
 
 function timeAgo(s) {
   if (!s) return '-'
@@ -659,7 +660,15 @@ function BadgesTab() {
               {emojiIconName(b.icon) ? <Icon name={emojiIconName(b.icon)} size={20} /> : b.icon}
             </span>
             <strong style={{ flex: 1 }}>{b.name}</strong>
-            <span className={'status-badge ' + (b.isActive ? 'active' : 'disabled')}>{b.isActive ? '启用' : '停用'}</span>
+            <span className="admin-toggle">
+              <JellyToggle
+                checked={b.isActive}
+                onChange={() => toggleActive(b)}
+                label={`${b.name} 启用开关`}
+                title={b.isActive ? '点击停用' : '点击启用'}
+              />
+              <span>{b.isActive ? '启用中' : '已停用'}</span>
+            </span>
             <span className="badge-cond" style={{ fontSize: 12 }}>{describeBadgeCondition(b.conditionType, b.conditionValue)}</span>
           </div>
           <div className="post-meta">
@@ -667,10 +676,6 @@ function BadgesTab() {
             <span>· {b.holderCount} 人持有</span>
           </div>
           <div className="admin-row-actions">
-            <button className="btn-ghost" onClick={() => toggleActive(b)}>
-              <Icon name={b.isActive ? 'x-circle' : 'check-circle'} size={14} />
-              {b.isActive ? '停用' : '启用'}
-            </button>
             <button className="btn-ghost danger" onClick={() => del(b)}>
               <Icon name="trash-2" size={14} />
               删除

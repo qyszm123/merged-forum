@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import Icon from '../components/Icon.jsx'
+import MorphButton from '../components/MorphButton.jsx'
 
 function fmtSize(n) {
   n = Number(n || 0)
@@ -18,7 +19,7 @@ export default function CreatePostPage() {
   const [content, setContent] = useState('')
   const [tags, setTags] = useState('')
   const [err, setErr] = useState('')
-  const [busy, setBusy] = useState(false)
+  const [submitState, setSubmitState] = useState('idle')
   const [attIds, setAttIds] = useState([])
   const [attFiles, setAttFiles] = useState([])
   const [uploading, setUploading] = useState(false)
@@ -65,7 +66,8 @@ export default function CreatePostPage() {
       setErr('请选择板块并填写标题与内容')
       return
     }
-    setBusy(true)
+    if (submitState !== 'idle') return
+    setSubmitState('loading')
     try {
       const r = await api.post('/api/forum/posts', {
         boardSlug,
@@ -74,11 +76,11 @@ export default function CreatePostPage() {
         tags: tags.split(/[,，\s]+/).map((t) => t.trim()).filter(Boolean).slice(0, 8),
         attachments: attIds.length ? attIds : undefined
       })
-      navigate(`/post/${r.id}`)
+      setSubmitState('success')
+      setTimeout(() => navigate(`/post/${r.id}`), 520)
     } catch (error) {
       setErr(error.message)
-    } finally {
-      setBusy(false)
+      setSubmitState('idle')
     }
   }
 
@@ -143,10 +145,9 @@ export default function CreatePostPage() {
           </div>
         )}
         {err && <div className="error-text">{err}</div>}
-        <button className="btn-primary" type="submit" disabled={busy}>
-          <Icon name="send" size={15} />
-          {busy ? '发布中…' : '发布'}
-        </button>
+        <MorphButton state={submitState} icon="send">
+          发布
+        </MorphButton>
       </form>
     </div>
   )

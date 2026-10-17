@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import Icon from '../components/Icon.jsx'
+import MorphButton from '../components/MorphButton.jsx'
 
 const DEMO_ACCOUNTS = ['2026001', '2026002', '2026003', 'teacher', 'admin']
 
@@ -13,13 +14,15 @@ export default function LoginPage() {
     studentNo: '', password: '', displayName: '', className: '', grade: '', inviteCode: ''
   })
   const [err, setErr] = useState('')
-  const [busy, setBusy] = useState(false)
+  const [submitState, setSubmitState] = useState('idle')
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
   const submit = async (e) => {
     e.preventDefault()
-    setErr(''); setBusy(true)
+    if (submitState !== 'idle') return
+    setErr('')
+    setSubmitState('loading')
     try {
       if (tab === 'login') {
         await login(form.studentNo.trim(), form.password)
@@ -32,11 +35,12 @@ export default function LoginPage() {
           grade: form.grade.trim() || undefined
         })
       }
-      navigate('/')
+      setSubmitState('success')
+      // 留一点时间让对勾可见，再跳转
+      setTimeout(() => navigate('/'), 560)
     } catch (error) {
       setErr(error.message)
-    } finally {
-      setBusy(false)
+      setSubmitState('idle')
     }
   }
 
@@ -96,10 +100,13 @@ export default function LoginPage() {
             </>
           )}
           {err && <div className="error-text">{err}</div>}
-          <button className="btn-primary" style={{ width: '100%' }} disabled={busy}>
-            <Icon name={tab === 'login' ? 'log-in' : 'user-plus'} size={15} />
-            {busy ? '处理中…' : tab === 'login' ? '登录' : '注册并进入'}
-          </button>
+          <MorphButton
+            block
+            state={submitState}
+            icon={tab === 'login' ? 'log-in' : 'user-plus'}
+          >
+            {tab === 'login' ? '登录' : '注册并进入'}
+          </MorphButton>
         </form>
 
         {tab === 'login' && (

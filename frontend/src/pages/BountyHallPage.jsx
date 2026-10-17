@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import Icon from '../components/Icon.jsx'
+import MorphButton from '../components/MorphButton.jsx'
 
 function timeAgo(s) {
   if (!s) return ''
@@ -40,7 +41,7 @@ export default function BountyHallPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [reward, setReward] = useState(20)
-  const [busy, setBusy] = useState(false)
+  const [submitState, setSubmitState] = useState('idle')
   const [formErr, setFormErr] = useState('')
 
   const load = () => {
@@ -70,20 +71,25 @@ export default function BountyHallPage() {
       setFormErr(`积分不足，当前余额 ${myPoints}`)
       return
     }
-    setBusy(true)
+    if (submitState !== 'idle') return
+    setSubmitState('loading')
     try {
       const r = await api.post('/api/bounty', {
         title: title.trim(),
         content: content.trim(),
         rewardPoints: Number(reward)
       })
-      setTitle(''); setContent(''); setReward(20); setShowForm(false)
+      setTitle(''); setContent(''); setReward(20)
       setMyPoints((p) => p - Number(reward))
-      navigate(`/bounty/${r.id}`)
+      setSubmitState('success')
+      setTimeout(() => {
+        setShowForm(false)
+        setSubmitState('idle')
+        navigate(`/bounty/${r.id}`)
+      }, 560)
     } catch (error) {
       setFormErr(error.message)
-    } finally {
-      setBusy(false)
+      setSubmitState('idle')
     }
   }
 
@@ -110,10 +116,9 @@ export default function BountyHallPage() {
           <label className="field-label">赏金积分（发布后从账户冻结，采纳后转给回答者）</label>
           <input className="input" type="number" min="1" max={myPoints} value={reward} onChange={(e) => setReward(e.target.value)} />
           {formErr && <div className="error-text">{formErr}</div>}
-          <button className="btn-primary" type="submit" disabled={busy}>
-            <Icon name="send" size={15} />
-            {busy ? '发布中…' : '发布悬赏'}
-          </button>
+          <MorphButton state={submitState} icon="send">
+            发布悬赏
+          </MorphButton>
         </form>
       )}
 

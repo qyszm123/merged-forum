@@ -1573,6 +1573,15 @@ img { max-width: 100%; display: block; }
 .admin-badge-item.owned {
   border-color: color-mix(in srgb, var(--theme-success) 45%, transparent);
 }
+/* 勋章列表里的启用开关 + 状态文字 */
+.admin-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+  font-size: var(--fs-12);
+  color: var(--theme-text-muted);
+}
 
 /* ==================== 9. 职业学习 ==================== */
 .career-grid {
@@ -2516,7 +2525,213 @@ img { max-width: 100%; display: block; }
   font-size: var(--fs-13);
 }
 
-/* ==================== 12. 动画 ==================== */
+/* ==================== 12. 微交互 ==================== */
+
+/* ---------- 12.1 点赞爆粒子（Like Burst） ---------- */
+.like-burst {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.like-burst .like-heart {
+  display: inline-flex;
+  transition: color var(--dur-fast);
+}
+.like-burst:hover .like-heart { color: var(--theme-error); }
+.like-burst.is-liked { color: var(--theme-error); }
+
+/* 压扁 → 弹起。只在点赞后加 is-bursting，避免页面加载时满屏跳动 */
+.like-burst.is-bursting .like-heart {
+  animation: likePop 0.42s var(--ease-spring) both;
+}
+@keyframes likePop {
+  0%   { transform: scale(1); }
+  22%  { transform: scale(0.72); }  /* 先压扁 */
+  55%  { transform: scale(1.28); }  /* 再弹起 */
+  78%  { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+
+/* 从爱心中心向四周炸开的小圆点 */
+.like-particles {
+  position: absolute;
+  left: calc(var(--heart, 16px) / 2);
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.like-particles i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: var(--burst-color, #F87171);
+  animation: burstDot 0.62s var(--ease-out) both;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes burstDot {
+  0%   { transform: translate(0, 0) scale(0.3); opacity: 0; }
+  18%  { opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0.15); opacity: 0; }
+}
+
+/* ---------- 12.2 数字滚动（里程表） ---------- */
+.roll-num {
+  display: inline-flex;
+  align-items: flex-start;
+  height: 1.15em;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+/* 给读屏用的真实数值 */
+.roll-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.roll-digit {
+  display: inline-block;
+  height: 1.15em;
+  overflow: hidden;
+}
+.roll-track {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.45s cubic-bezier(0.22, 0.72, 0.24, 1);
+  will-change: transform;
+}
+.roll-cell {
+  display: block;
+  height: 1.15em;
+  line-height: 1.15em;
+  text-align: center;
+}
+
+/* ---------- 12.3 提交按钮三连变（Submit Morph） ---------- */
+.morph-btn {
+  position: relative;
+  height: 40px;
+  padding: 0 16px;
+  overflow: hidden;
+  transition:
+    width 0.32s var(--ease-out),
+    padding 0.32s var(--ease-out),
+    border-radius 0.32s var(--ease-out),
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.morph-btn.is-morphing {
+  padding-left: 0;
+  padding-right: 0;
+  border-radius: 50%;
+}
+/* 形变期间按钮是 disabled 的，但不要用默认的半透明置灰 */
+.morph-btn.is-loading,
+.morph-btn.is-loading:disabled {
+  background: var(--theme-primary);
+  border-color: transparent;
+}
+.morph-btn.is-morphing:disabled {
+  opacity: 1;
+  cursor: default;
+  box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--theme-primary) 55%, transparent);
+}
+.morph-btn.is-success,
+.morph-btn.is-success:disabled {
+  background: var(--theme-success);
+  border-color: transparent;
+  box-shadow: 0 3px 12px -3px color-mix(in srgb, var(--theme-success) 70%, transparent);
+}
+.morph-label {
+  display: inline-block;
+  white-space: nowrap;
+}
+.morph-spinner {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: spin 0.72s linear infinite;
+}
+.morph-check {
+  display: inline-flex;
+  color: #fff;
+  animation: morphCheckIn 0.34s var(--ease-spring) both;
+}
+@keyframes morphCheckIn {
+  0%   { transform: scale(0.3); opacity: 0; }
+  60%  { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ---------- 12.4 果冻开关（Jelly Toggle） ---------- */
+.jelly-toggle {
+  --track-w: 42px;
+  --track-h: 24px;
+  --knob: 18px;
+  --pad: 3px;
+  /* 42 - 18 - 3*2 = 18，圆点滑到底的位移 */
+  --travel: 18px;
+
+  position: relative;
+  flex-shrink: 0;
+  width: var(--track-w);
+  height: var(--track-h);
+  padding: 0;
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--theme-surface-light);
+  box-shadow: inset 0 0 0 1px var(--theme-border-strong);
+  cursor: pointer;
+  transition: background-color 0.24s ease, box-shadow 0.24s ease;
+}
+.jelly-toggle.is-on {
+  background: var(--theme-success);
+  box-shadow: inset 0 0 0 1px transparent;
+}
+.jelly-toggle.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.jelly-knob {
+  position: absolute;
+  left: var(--pad);
+  top: 50%;
+  width: var(--knob);
+  height: var(--knob);
+  margin-top: calc(var(--knob) / -2);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
+  transform: translateX(0) scale(1);
+  transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+.jelly-toggle[data-checked='true'] .jelly-knob {
+  transform: translateX(var(--travel)) scale(1);
+}
+/* 滑动途中被拉长（横向拉伸、纵向压扁）；结束后移除 is-moving 就会弹回正圆 */
+.jelly-toggle.is-moving .jelly-knob {
+  transform: translateX(0) scale(1.3, 0.8);
+}
+.jelly-toggle[data-checked='true'].is-moving .jelly-knob {
+  transform: translateX(var(--travel)) scale(1.3, 0.8);
+}
+
+/* ==================== 13. 动画 ==================== */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
@@ -2525,7 +2740,7 @@ img { max-width: 100%; display: block; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 @keyframes shimmer { 0% { background-position: -480px 0; } 100% { background-position: 480px 0; } }
 
-/* ==================== 13. 响应式 ==================== */
+/* ==================== 14. 响应式 ==================== */
 @media (max-width: 1120px) {
   .right-sidebar { display: none; }
   .content-shell { padding: var(--sp-5) var(--sp-4) var(--sp-10); }
@@ -2566,7 +2781,7 @@ img { max-width: 100%; display: block; }
   .badge-grid { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
 }
 
-/* ==================== 14. 无障碍 ==================== */
+/* ==================== 15. 无障碍 ==================== */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

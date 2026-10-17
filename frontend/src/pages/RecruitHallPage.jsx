@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import api from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import Icon from '../components/Icon.jsx'
+import MorphButton from '../components/MorphButton.jsx'
 
 function timeAgo(s) {
   if (!s) return ''
@@ -36,7 +37,7 @@ export default function RecruitHallPage() {
   const [content, setContent] = useState('')
   const [roles, setRoles] = useState([]) // [{role, count}]
   const [customRole, setCustomRole] = useState('')
-  const [busy, setBusy] = useState(false)
+  const [submitState, setSubmitState] = useState('idle')
   const [formErr, setFormErr] = useState('')
 
   const load = () => {
@@ -74,19 +75,24 @@ export default function RecruitHallPage() {
       setFormErr('请至少选择 1 个职业')
       return
     }
-    setBusy(true)
+    if (submitState !== 'idle') return
+    setSubmitState('loading')
     try {
       const r = await api.post('/api/recruit', {
         title: title.trim(),
         content: content.trim(),
         roles
       })
-      setTitle(''); setContent(''); setRoles([]); setCustomRole(''); setShowForm(false)
-      navigate(`/recruit/${r.id}`)
+      setTitle(''); setContent(''); setRoles([]); setCustomRole('')
+      setSubmitState('success')
+      setTimeout(() => {
+        setShowForm(false)
+        setSubmitState('idle')
+        navigate(`/recruit/${r.id}`)
+      }, 560)
     } catch (error) {
       setFormErr(error.message)
-    } finally {
-      setBusy(false)
+      setSubmitState('idle')
     }
   }
 
@@ -176,10 +182,9 @@ export default function RecruitHallPage() {
           )}
 
           {formErr && <div className="error-text">{formErr}</div>}
-          <button className="btn-primary" type="submit" disabled={busy}>
-            <Icon name="send" size={15} />
-            {busy ? '发布中…' : '发布招募'}
-          </button>
+          <MorphButton state={submitState} icon="send">
+            发布招募
+          </MorphButton>
         </form>
       )}
 
